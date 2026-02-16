@@ -14,19 +14,73 @@ model List {
   name      String
   emoji     String?
   color     String?
+  isDefault Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   tasks     Task[]
 }
 
 model Task {
-  id          String   @id @default(cuid())
-  title       String
-  description String?
-  completed   Boolean  @default(false)
-  dueDate     DateTime?
-  listId      String?
-  list        List?    @relation(fields: [listId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String      @id @default(cuid())
+  title           String
+  description     String?
+  completed       Boolean     @default(false)
+  dueDate         DateTime?
+  deadline        DateTime?
+  reminder        DateTime?
+  estimate        Int? // in minutes
+  actualTime      Int? // in minutes
+  priority        Priority    @default(NONE)
+  recurringType   RecurringType?
+  recurringCustom String?
+  attachmentUrl   String?
+  listId          String?
+  list            List?       @relation(fields: [listId], references: [id])
+  labels          Label[]     @relation("TaskLabels")
+  subtasks        Subtask[]
+  taskLogs        TaskLog[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model Label {
+  id        String   @id @default(cuid())
+  name      String
+  emoji     String?
+  color     String?
+  tasks     Task[]   @relation("TaskLabels")
+  createdAt DateTime @default(now())
+}
+
+model Subtask {
+  id        String   @id @default(cuid())
+  title     String
+  completed Boolean  @default(false)
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model TaskLog {
+  id        String   @id @default(cuid())
+  action    String
+  details   String?
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+enum Priority {
+  HIGH
+  MEDIUM
+  LOW
+  NONE
+}
+
+enum RecurringType {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+  CUSTOM
 }
