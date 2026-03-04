@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { PRIORITY_COLORS } from "@/types";
-import type { Task, Label } from "@/types";
+import type { Task } from "@/types";
 
 interface TaskCardProps {
   task: Task;
