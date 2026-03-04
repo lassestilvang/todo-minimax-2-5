@@ -17,7 +17,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import type { Task, List, Label, Priority, RecurringType, TaskFormData } from "@/types";
+import type { Task, List, Label, RecurringType, TaskFormData } from "@/types";
 
 const taskSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -53,7 +53,6 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels }: Tas
   const {
     register,
     handleSubmit,
-    setValue,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<z.infer<typeof taskSchema>>({
@@ -80,8 +79,6 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels }: Tas
         listId: task.listId || "",
         labelIds: task.labels?.map((l) => l.id) || [],
       });
-      setDueDate(task.dueDate ? new Date(task.dueDate) : undefined);
-      setSelectedLabels(task.labels?.map((l) => l.id) || []);
     } else {
       reset({
         title: "",
@@ -92,10 +89,8 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels }: Tas
         listId: "",
         labelIds: [],
       });
-      setDueDate(undefined);
-      setSelectedLabels([]);
     }
-  }, [task, reset, isOpen]);
+  }, [task, reset]);
 
   const handleFormSubmit = (data: z.infer<typeof taskSchema>) => {
     onSubmit({
