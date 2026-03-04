@@ -7,7 +7,6 @@ import {
   Calendar,
   Clock,
   Flag,
-  MoreHorizontal,
   Trash2,
   Edit2,
   ChevronDown,
@@ -19,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { PRIORITY_COLORS } from "@/types";
-import type { Task, Subtask, Label } from "@/types";
+import type { Task, Label } from "@/types";
 
 interface TaskCardProps {
   task: Task;
@@ -30,7 +29,6 @@ interface TaskCardProps {
 
 export function TaskCard({ task, onToggleComplete, onDelete, onEdit }: TaskCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
 
   const isOverdue =
     task.dueDate && !task.completed && isPast(new Date(task.dueDate)) && !isToday(new Date(task.dueDate));
