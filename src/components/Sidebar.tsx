@@ -10,9 +10,6 @@ import {
   ChevronDown,
   Plus,
   Tag,
-  MoreHorizontal,
-  Trash2,
-  Edit2,
   Sun,
   Moon,
   Menu,
@@ -20,9 +17,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { LIST_COLORS } from "@/types";
 import type { List, Label } from "@/types";
 
 interface SidebarProps {
@@ -40,6 +34,7 @@ export function Sidebar({
   currentListId,
   currentView = "all",
 }: SidebarProps) {
+  const pathname = usePathname();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
