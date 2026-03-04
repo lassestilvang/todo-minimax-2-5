@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import React from "react";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
@@ -43,68 +43,80 @@ interface TaskFormProps {
 }
 
 export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels }: TaskFormProps) {
-  const [dueDate, setDueDate] = useState<Date | undefined>(
-    task?.dueDate ? new Date(task.dueDate) : undefined
-  );
-  const [selectedLabels, setSelectedLabels] = useState<string[]>(
-    task?.labels?.map((l) => l.id) || []
-  );
-
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<z.infer<typeof taskSchema>>({
     resolver: zodResolver(taskSchema),
     defaultValues: {
-      title: task?.title || "",
-      description: task?.description || "",
-      priority: task?.priority || "NONE",
-      recurringType: task?.recurringType as RecurringType | undefined,
-      recurringCustom: task?.recurringCustom || "",
-      listId: task?.listId || "",
-      labelIds: task?.labels?.map((l) => l.id) || [],
+      title: "",
+      description: "",
+      priority: "NONE",
+      recurringType: undefined,
+      recurringCustom: "",
+      listId: "",
+      labelIds: [],
+      dueDate: undefined,
     },
   });
 
-  useEffect(() => {
-    if (task) {
-      reset({
-        title: task.title,
-        description: task.description || "",
-        priority: task.priority,
-        recurringType: task.recurringType as RecurringType | undefined,
-        recurringCustom: task.recurringCustom || "",
-        listId: task.listId || "",
-        labelIds: task.labels?.map((l) => l.id) || [],
-      });
-    } else {
-      reset({
-        title: "",
-        description: "",
-        priority: "NONE",
-        recurringType: undefined,
-        recurringCustom: "",
-        listId: "",
-        labelIds: [],
-      });
+  // Watch labelIds from form
+  const watchedLabelIds = useWatch({ control, name: "labelIds" }) ?? [];
+  // Watch dueDate from form
+  const watchedDueDate = useWatch({ control, name: "dueDate" });
+
+  // Reset form when task changes
+  React.useEffect(() => {
+    if (isOpen) {
+      if (task) {
+        reset({
+          title: task.title,
+          description: task.description || "",
+          priority: task.priority,
+          recurringType: task.recurringType as RecurringType | undefined,
+          recurringCustom: task.recurringCustom || "",
+          listId: task.listId || "",
+          labelIds: task.labels?.map((l) => l.id) || [],
+          dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
+        });
+      } else {
+        reset({
+          title: "",
+          description: "",
+          priority: "NONE",
+          recurringType: undefined,
+          recurringCustom: "",
+          listId: "",
+          labelIds: [],
+          dueDate: undefined,
+        });
+      }
     }
-  }, [task, reset]);
+  }, [task, reset, isOpen]);
+
+  const toggleLabel = (labelId: string) => {
+    const current = watchedLabelIds || [];
+    const newLabels = current.includes(labelId)
+      ? current.filter((id) => id !== labelId)
+      : [...current, labelId];
+    setValue("labelIds", newLabels, { shouldValidate: true });
+  };
 
   const handleFormSubmit = (data: z.infer<typeof taskSchema>) => {
     onSubmit({
       ...data,
-      dueDate,
-      labelIds: selectedLabels,
+      dueDate: watchedDueDate,
+      labelIds: watchedLabelIds,
     } as TaskFormData);
     onClose();
   };
 
-  const toggleLabel = (labelId: string) => {
-    setSelectedLabels((prev) =>
-      prev.includes(labelId) ? prev.filter((id) => id !== labelId) : [...prev, labelId]
-    );
+  const handleDueDateChange = (value: string) => {
+    setValue("dueDate", value ? new Date(value) : undefined, { shouldValidate: false });
   };
 
   return (
@@ -138,14 +150,12 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels }: Tas
             <div className="mt-1 flex gap-2">
               <Input
                 type="date"
-                value={dueDate ? format(dueDate, "yyyy-MM-dd") : ""}
-                onChange={(e) =>
-                  setDueDate(e.target.value ? new Date(e.target.value) : undefined)
-                }
+                value={watchedDueDate ? format(watchedDueDate, "yyyy-MM-dd") : ""}
+                onChange={(e) => handleDueDateChange(e.target.value)}
                 className="flex-1"
               />
-              {dueDate && (
-                <Button type="button" variant="ghost" size="icon" onClick={() => setDueDate(undefined)}>
+              {watchedDueDate && (
+                <Button type="button" variant="ghost" size="icon" onClick={() => setValue("dueDate", undefined)}>
                   <X className="h-4 w-4" />
                 </Button>
               )}
@@ -193,15 +203,15 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels }: Tas
                   onClick={() => toggleLabel(label.id)}
                   className={cn(
                     "flex items-center gap-1 rounded-full px-3 py-1 text-sm transition-colors",
-                    selectedLabels.includes(label.id) ? "bg-opacity-100" : "bg-opacity-20 hover:bg-opacity-40"
+                    (watchedLabelIds || []).includes(label.id) ? "bg-opacity-100" : "bg-opacity-20 hover:bg-opacity-40"
                   )}
                   style={{
-                    backgroundColor: selectedLabels.includes(label.id)
+                    backgroundColor: (watchedLabelIds || []).includes(label.id)
                       ? label.color || "#6b7280"
                       : label.color
                       ? `${label.color}30`
                       : "#6b728030",
-                    color: selectedLabels.includes(label.id) ? "white" : label.color || "#6b7280",
+                    color: (watchedLabelIds || []).includes(label.id) ? "white" : label.color || "#6b7280",
                   }}
                 >
                   {label.emoji} {label.name}
