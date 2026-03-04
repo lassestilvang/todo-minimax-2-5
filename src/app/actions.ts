@@ -2,7 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import type { ListFormData, LabelFormData, TaskFormData, Priority, RecurringType } from "@/types";
+import type { ListFormData, LabelFormData, TaskFormData } from "@/types";
 
 // List Actions
 export async function createList(data: ListFormData) {
@@ -211,7 +211,7 @@ export async function getTasks(view?: string, listId?: string) {
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
   
-  let where: Record<string, unknown> = {};
+  const where: Record<string, unknown> = {};
   
   if (listId) {
     where.listId = listId;
