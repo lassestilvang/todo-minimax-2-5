@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import {
   Inbox,
   Calendar,
@@ -34,8 +33,6 @@ export function Sidebar({
   currentListId,
   currentView = "all",
 }: SidebarProps) {
-  const pathname = usePathname();
-  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
     lists: true,
