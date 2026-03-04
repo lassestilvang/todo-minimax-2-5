@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useTransition, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
-import { Plus, Filter, Eye, EyeOff } from "lucide-react";
+import { Plus, Eye, EyeOff } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { Sidebar } from "@/components/Sidebar";
@@ -14,7 +14,6 @@ import { ViewToggle } from "@/components/ViewToggle";
 import { EmptyState } from "@/components/EmptyState";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import type { Task, List, Label, TaskFormData, ViewType } from "@/types";
 import * as actions from "./actions";
@@ -33,7 +32,7 @@ function HomeContent() {
   const [lists, setLists] = useState<List[]>([]);
   const [labels, setLabels] = useState<Label[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const [showCompleted, setShowCompleted] = useState(true);
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
