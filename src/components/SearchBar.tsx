@@ -5,7 +5,6 @@ import Fuse from "fuse.js";
 import { Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import type { Task } from "@/types";
 
 interface SearchBarProps {
@@ -95,7 +94,7 @@ export function SearchBar({ tasks, onSelectTask }: SearchBarProps) {
       {isOpen && query && results.length === 0 && (
         <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover p-4 shadow-md animate-fade-in">
           <p className="text-sm text-muted-foreground text-center">
-            No tasks found for "{query}"
+            No tasks found for &quot;{query}&quot;
           </p>
         </div>
       )}
