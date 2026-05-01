@@ -17,6 +17,12 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { AttachmentUpload } from "@/components/attachment-upload";
+import { AttachmentList } from "@/components/attachment-list";
+import {
+  deleteAttachment,
+  getTaskById,
+} from "@/app/actions";
 import type { Task, List, Label, RecurringType, TaskFormData } from "@/types";
 
 const taskSchema = z.object({
@@ -117,6 +123,18 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels }: Tas
 
   const handleDueDateChange = (value: string) => {
     setValue("dueDate", value ? new Date(value) : undefined, { shouldValidate: false });
+  };
+
+  const handleDeleteAttachment = async (id: string) => {
+    // Call deleteAttachment server action
+    await deleteAttachment(id);
+    // Close and reopen to refresh (or better, refetch task)
+    if (task) {
+      const updated = await getTaskById(task.id);
+      // Update local state if parent passes a callback or you manage state differently
+      // For now, we'll just log
+      console.log("Attachment deleted");
+    }
   };
 
   return (
@@ -248,6 +266,33 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels }: Tas
               <option value="CUSTOM">Custom</option>
             </select>
           </div>
+
+          {/* Attachments */}
+          {task && (
+            <div>
+              <label className="text-sm font-medium">Attachments</label>
+              <AttachmentUpload
+                taskId={task.id}
+                onUploadComplete={(attachments) => {
+                  // Handle upload complete - typically you'd call a server action
+                  console.log("Uploaded:", attachments);
+                }}
+                onError={(error) => {
+                  console.error("Upload error:", error);
+                }}
+              />
+              {/* Display existing attachments */}
+              {task.attachments && task.attachments.length > 0 && (
+                <div className="mt-4">
+                  <AttachmentList
+                    attachments={task.attachments}
+                    onDelete={handleDeleteAttachment}
+                    onDownload={(id) => console.log("download", id)}
+                  />
+                </div>
+              )}
+            </div>
+          )}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>

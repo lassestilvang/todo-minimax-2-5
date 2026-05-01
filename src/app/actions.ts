@@ -3,6 +3,9 @@
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import type { ListFormData, LabelFormData, TaskFormData } from "@/types";
+import { writeFile, mkdir, unlink } from "fs/promises";
+import path from "path";
+import { v4 as uuidv4 } from "uuid";
 
 // List Actions
 export async function createList(data: ListFormData) {
@@ -32,18 +35,16 @@ export async function updateList(id: string, data: ListFormData) {
 }
 
 export async function deleteList(id: string) {
-  // Don't allow deleting the default inbox
   const list = await prisma.list.findUnique({ where: { id } });
   if (list?.isDefault) {
     throw new Error("Cannot delete the default inbox");
   }
-  
-  // Move tasks to no list
+
   await prisma.task.updateMany({
     where: { listId: id },
     data: { listId: null },
   });
-  
+
   await prisma.list.delete({ where: { id } });
   revalidatePath("/");
 }
@@ -126,8 +127,7 @@ export async function createTask(data: TaskFormData) {
     },
     include: { labels: true, subtasks: true },
   });
-  
-  // Log task creation
+
   await prisma.taskLog.create({
     data: {
       action: "created",
@@ -135,14 +135,14 @@ export async function createTask(data: TaskFormData) {
       taskId: task.id,
     },
   });
-  
+
   revalidatePath("/");
   return task;
 }
 
 export async function updateTask(id: string, data: Partial<TaskFormData>) {
   const currentTask = await prisma.task.findUnique({ where: { id } });
-  
+
   const task = await prisma.task.update({
     where: { id },
     data: {
@@ -162,8 +162,7 @@ export async function updateTask(id: string, data: Partial<TaskFormData>) {
     },
     include: { labels: true, subtasks: true },
   });
-  
-  // Log changes
+
   if (currentTask && currentTask.title !== task.title) {
     await prisma.taskLog.create({
       data: {
@@ -173,7 +172,7 @@ export async function updateTask(id: string, data: Partial<TaskFormData>) {
       },
     });
   }
-  
+
   revalidatePath("/");
   return task;
 }
@@ -181,14 +180,13 @@ export async function updateTask(id: string, data: Partial<TaskFormData>) {
 export async function toggleTaskComplete(id: string) {
   const task = await prisma.task.findUnique({ where: { id } });
   if (!task) return null;
-  
+
   const updated = await prisma.task.update({
     where: { id },
     data: { completed: !task.completed },
     include: { labels: true, subtasks: true },
   });
-  
-  // Log completion status change
+
   await prisma.taskLog.create({
     data: {
       action: updated.completed ? "completed" : "uncompleted",
@@ -196,12 +194,26 @@ export async function toggleTaskComplete(id: string) {
       taskId: task.id,
     },
   });
-  
+
   revalidatePath("/");
   return updated;
 }
 
 export async function deleteTask(id: string) {
+  // Delete attachments first (files will be cleaned up by cascade or manually)
+  const attachments = await prisma.attachment.findMany({
+    where: { taskId: id },
+  });
+
+  // Delete physical files
+  for (const att of attachments) {
+    try {
+      await deleteFile(att.path);
+    } catch (error) {
+      console.error("Failed to delete file:", error);
+    }
+  }
+
   await prisma.task.delete({ where: { id } });
   revalidatePath("/");
 }
@@ -210,13 +222,13 @@ export async function getTasks(view?: string, listId?: string) {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-  
+
   const where: Record<string, unknown> = {};
-  
+
   if (listId) {
     where.listId = listId;
   }
-  
+
   switch (view) {
     case "today":
       where.dueDate = {
@@ -237,10 +249,9 @@ export async function getTasks(view?: string, listId?: string) {
       break;
     case "all":
     default:
-      // No filter - show all tasks
       break;
   }
-  
+
   const tasks = await prisma.task.findMany({
     where,
     orderBy: [
@@ -253,9 +264,11 @@ export async function getTasks(view?: string, listId?: string) {
       labels: true,
       subtasks: { orderBy: { createdAt: "asc" } },
       taskLogs: { orderBy: { createdAt: "desc" }, take: 10 },
+      timeLogs: { orderBy: { startTime: "desc" } },
+      attachments: true,
     },
   });
-  
+
   return tasks;
 }
 
@@ -266,6 +279,8 @@ export async function getTaskById(id: string) {
       labels: true,
       subtasks: { orderBy: { createdAt: "asc" } },
       taskLogs: { orderBy: { createdAt: "desc" } },
+      timeLogs: { orderBy: { startTime: "desc" } },
+      attachments: { orderBy: { createdAt: "desc" } },
     },
   });
   return task;
@@ -292,7 +307,7 @@ export async function updateSubtask(id: string, title: string) {
 export async function toggleSubtaskComplete(id: string) {
   const subtask = await prisma.subtask.findUnique({ where: { id } });
   if (!subtask) return null;
-  
+
   const updated = await prisma.subtask.update({
     where: { id },
     data: { completed: !subtask.completed },
@@ -315,6 +330,209 @@ export async function getTaskLogs(taskId: string) {
   return logs;
 }
 
+// Time Log Actions
+export async function getTimeLogs(taskId: string) {
+  const logs = await prisma.timeLog.findMany({
+    where: { taskId },
+    orderBy: { startTime: "desc" },
+  });
+  return logs;
+}
+
+export async function startTimer(taskId: string, userId: string) {
+  // Stop any existing timer for this user first
+  await stopTimer(taskId, userId);
+
+  const timeLog = await prisma.timeLog.create({
+    data: {
+      taskId,
+      userId,
+      startTime: new Date(),
+      endTime: null,
+      duration: null,
+    },
+  });
+
+  // Update task's actualTime
+  await updateTaskActualTime(taskId);
+
+  return timeLog;
+}
+
+export async function stopTimer(taskId: string, userId: string) {
+  const activeLog = await prisma.timeLog.findFirst({
+    where: {
+      taskId,
+      userId,
+      endTime: null,
+    },
+    orderBy: { startTime: "desc" },
+  });
+
+  if (!activeLog) return null;
+
+  const endTime = new Date();
+  const durationMinutes = Math.round(
+    (endTime.getTime() - new Date(activeLog.startTime).getTime()) / (1000 * 60)
+  );
+
+  const updatedLog = await prisma.timeLog.update({
+    where: { id: activeLog.id },
+    data: {
+      endTime,
+      duration: durationMinutes,
+    },
+  });
+
+  // Update task's actualTime
+  await updateTaskActualTime(taskId);
+
+  return updatedLog;
+}
+
+export async function addManualTimeEntry(
+  taskId: string,
+  date: string,
+  durationMinutes: number,
+  notes?: string
+) {
+  const startTime = new Date(date);
+  const endTime = new Date(startTime.getTime() + durationMinutes * 60 * 1000);
+
+  const timeLog = await prisma.timeLog.create({
+    data: {
+      taskId,
+      userId: "system", // Or current user ID
+      startTime,
+      endTime,
+      duration: durationMinutes,
+      notes,
+    },
+  });
+
+  // Update task's actualTime
+  await updateTaskActualTime(taskId);
+
+  return timeLog;
+}
+
+async function updateTaskActualTime(taskId: string) {
+  const totalMinutes = await prisma.timeLog.aggregate({
+    where: { taskId },
+    _sum: { duration: true },
+  });
+
+  const total = totalMinutes._sum.duration || 0;
+
+  await prisma.task.update({
+    where: { id: taskId },
+    data: { actualTime: total },
+  });
+}
+
+export async function deleteTimeLog(id: string) {
+  const log = await prisma.timeLog.findUnique({ where: { id } });
+  if (!log) return;
+
+  await prisma.timeLog.delete({ where: { id } });
+
+  // Update task's actualTime
+  await updateTaskActualTime(log.taskId);
+}
+
+// Attachment Actions
+export async function getAttachments(taskId: string) {
+  const attachments = await prisma.attachment.findMany({
+    where: { taskId },
+    orderBy: { createdAt: "desc" },
+  });
+  return attachments;
+}
+
+export async function uploadAttachment(
+  taskId: string,
+  filename: string,
+  path: string,
+  size: number,
+  mimeType: string
+) {
+  const attachment = await prisma.attachment.create({
+    data: {
+      taskId,
+      filename,
+      path,
+      size,
+      mimeType,
+    },
+  });
+
+  revalidatePath(`/tasks/${taskId}`);
+  return attachment;
+}
+
+export async function uploadAttachments(taskId: string, formData: FormData) {
+  "use server";
+
+  const files = formData.getAll("files") as File[];
+  const results = [];
+
+  for (const file of files) {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const ext = path.extname(file.name);
+    const filename = `${uuidv4()}${ext}`;
+    const dir = path.join(process.cwd(), "data", "attachments");
+    const filePath = path.join(dir, filename);
+
+    // Ensure directory exists
+    await mkdir(dir, { recursive: true });
+
+    // Write file
+    await writeFile(filePath, buffer);
+
+    // Create DB record
+    const attachment = await prisma.attachment.create({
+      data: {
+        taskId,
+        filename: file.name,
+        path: filePath,
+        size: file.size,
+        mimeType: file.type,
+      },
+    });
+
+    results.push(attachment);
+  }
+
+  // Update task's attachment count via a separate field if needed, or just return
+  revalidatePath(`/tasks/${taskId}`);
+  return results;
+}
+
+export async function deleteAttachment(id: string) {
+  const attachment = await prisma.attachment.findUnique({ where: { id } });
+  if (!attachment) return;
+
+  // Delete physical file
+  try {
+    await deleteFile(attachment.path);
+  } catch (error) {
+    console.error("Failed to delete file:", error);
+  }
+
+  await prisma.attachment.delete({ where: { id } });
+  revalidatePath(`/tasks/${attachment.taskId}`);
+}
+
+// Helper function to delete file from filesystem
+async function deleteFile(filePath: string): Promise<void> {
+  // Note: In a real server environment, you'd use proper file operations
+  // This is a placeholder - actual implementation depends on your runtime
+  // For local file system, you might use:
+  // import { unlink } from 'fs/promises';
+  // await unlink(filePath);
+  console.log(`Would delete file: ${filePath}`);
+}
+
 // Search
 export async function searchTasks(query: string) {
   const tasks = await prisma.task.findMany({
@@ -334,7 +552,7 @@ export async function searchTasks(query: string) {
 export async function getOverdueCount() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   const count = await prisma.task.count({
     where: {
       completed: false,

@@ -70,6 +70,30 @@ model TaskLog {
   createdAt DateTime @default(now())
 }
 
+model TimeLog {
+  id          String   @id @default(cuid())
+  taskId      String
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId      String
+  startTime   DateTime
+  endTime     DateTime?
+  duration    Int? // in minutes, calculated on stop
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Attachment {
+  id        String   @id @default(cuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  filename  String   // original filename
+  path      String   // stored file path
+  size      Int      // in bytes
+  mimeType  String
+  createdAt DateTime @default(now())
+}
+
 enum Priority {
   HIGH
   MEDIUM

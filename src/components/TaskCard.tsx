@@ -12,6 +12,7 @@ import {
   ChevronDown,
   ChevronUp,
   Paperclip,
+  Timer,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { PRIORITY_COLORS } from "@/types";
 import type { Task } from "@/types";
+import { TimeTrackingDialog } from "@/components/time-tracking-dialog";
 
 interface TaskCardProps {
   task: Task;
@@ -29,6 +31,8 @@ interface TaskCardProps {
 
 export function TaskCard({ task, onToggleComplete, onDelete, onEdit }: TaskCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const [showTimeDialog, setShowTimeDialog] = useState(false);
 
   const isOverdue =
     task.dueDate && !task.completed && isPast(new Date(task.dueDate)) && !isToday(new Date(task.dueDate));
@@ -115,7 +119,7 @@ export function TaskCard({ task, onToggleComplete, onDelete, onEdit }: TaskCardP
           )}
 
           {/* Meta info */}
-          <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
+          <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
             {task.dueDate && (
               <span
                 className={cn(
@@ -127,24 +131,39 @@ export function TaskCard({ task, onToggleComplete, onDelete, onEdit }: TaskCardP
                 {formatDueDate(new Date(task.dueDate))}
               </span>
             )}
-            {task.estimate && (
-              <span className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                {Math.floor(task.estimate / 60)}h {task.estimate % 60}m
-              </span>
-            )}
-            {task.attachmentUrl && (
-              <span className="flex items-center gap-1">
-                <Paperclip className="h-3 w-3" />
-                1
-              </span>
-            )}
-            {totalSubtasks > 0 && (
-              <span className="flex items-center gap-1">
-                <Check className="h-3 w-3" />
-                {completedSubtasks}/{totalSubtasks}
-              </span>
-            )}
+            <div className="flex items-center gap-4">
+              {/* Time Tracking Badge */}
+              {(task.estimate || (task.actualTime && task.actualTime > 0)) && (
+                <button
+                  type="button"
+                  onClick={() => setShowTimeDialog(true)}
+                  className="flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs hover:bg-muted/80 transition-colors"
+                  title="Track time"
+                >
+                  <Timer className="h-3 w-3" />
+                  {task.estimate && (
+                    <span>Est: {Math.floor(task.estimate / 60)}h {task.estimate % 60}m</span>
+                  )}
+                  {task.actualTime && task.actualTime > 0 && (
+                    <span className="text-green-600">
+                      / Tracked: {Math.floor(task.actualTime / 60)}h {task.actualTime % 60}m
+                    </span>
+                  )}
+                </button>
+              )}
+              {(task.attachments && task.attachments.length > 0) && (
+                <span className="flex items-center gap-1">
+                  <Paperclip className="h-3 w-3" />
+                  {task.attachments.length}
+                </span>
+              )}
+              {totalSubtasks > 0 && (
+                <span className="flex items-center gap-1">
+                  <Check className="h-3 w-3" />
+                  {completedSubtasks}/{totalSubtasks}
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Expanded subtasks */}
@@ -204,6 +223,16 @@ export function TaskCard({ task, onToggleComplete, onDelete, onEdit }: TaskCardP
           </Button>
         </div>
       </div>
+
+      {/* Time Tracking Dialog */}
+      {showTimeDialog && (
+        <TimeTrackingDialog
+          taskId={task.id}
+          isOpen={showTimeDialog}
+          onClose={() => setShowTimeDialog(false)}
+          userId="current-user-id" // TODO: get from auth context
+        />
+      )}
     </div>
   );
 }

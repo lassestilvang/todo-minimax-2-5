@@ -32,6 +32,8 @@ export interface Task {
   labels?: Label[];
   subtasks?: Subtask[];
   taskLogs?: TaskLog[];
+  timeLogs?: TimeLog[];
+  attachments?: Attachment[];
 }
 
 export interface Label {
@@ -55,6 +57,28 @@ export interface TaskLog {
   action: string;
   details: string | null;
   taskId: string;
+  createdAt: Date;
+}
+
+export interface TimeLog {
+  id: string;
+  taskId: string;
+  userId: string;
+  startTime: Date;
+  endTime: Date | null;
+  duration: number | null; // in minutes
+  notes: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Attachment {
+  id: string;
+  taskId: string;
+  filename: string;
+  path: string;
+  size: number;
+  mimeType: string;
   createdAt: Date;
 }
 
