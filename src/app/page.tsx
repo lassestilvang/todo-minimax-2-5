@@ -291,6 +291,7 @@ function HomeContent() {
         task={editingTask}
         lists={lists}
         labels={labels}
+        onTaskChange={(updatedTask) => setEditingTask(updatedTask)}
       />
     </div>
   );

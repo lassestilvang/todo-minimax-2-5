@@ -46,9 +46,10 @@ interface TaskFormProps {
   task?: Task | null;
   lists: List[];
   labels: Label[];
+  onTaskChange?: (task: Task) => void;
 }
 
-export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels }: TaskFormProps) {
+export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTaskChange }: TaskFormProps) {
   const {
     register,
     handleSubmit,
@@ -126,14 +127,12 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels }: Tas
   };
 
   const handleDeleteAttachment = async (id: string) => {
-    // Call deleteAttachment server action
     await deleteAttachment(id);
-    // Close and reopen to refresh (or better, refetch task)
-    if (task) {
+    if (task && onTaskChange) {
       const updated = await getTaskById(task.id);
-      // Update local state if parent passes a callback or you manage state differently
-      // For now, we'll just log
-      console.log("Attachment deleted");
+      if (updated) {
+        onTaskChange(updated);
+      }
     }
   };
 
