@@ -525,12 +525,11 @@ export async function deleteAttachment(id: string) {
 
 // Helper function to delete file from filesystem
 async function deleteFile(filePath: string): Promise<void> {
-  // Note: In a real server environment, you'd use proper file operations
-  // This is a placeholder - actual implementation depends on your runtime
-  // For local file system, you might use:
-  // import { unlink } from 'fs/promises';
-  // await unlink(filePath);
-  console.log(`Would delete file: ${filePath}`);
+  try {
+    await unlink(filePath);
+  } catch (error) {
+    console.error(`Failed to delete file ${filePath}:`, error);
+  }
 }
 
 // Search
