@@ -39,6 +39,8 @@ model Task {
   labels          Label[]     @relation("TaskLabels")
   subtasks        Subtask[]
   taskLogs        TaskLog[]
+  timeLogs        TimeLog[]
+  attachments     Attachment[]
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 }
