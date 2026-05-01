@@ -27,9 +27,10 @@ interface TaskCardProps {
   onToggleComplete: (id: string) => void;
   onDelete: (id: string) => void;
   onEdit: (task: Task) => void;
+  onToggleSubtask?: (id: string) => void;
 }
 
-export function TaskCard({ task, onToggleComplete, onDelete, onEdit }: TaskCardProps) {
+export function TaskCard({ task, onToggleComplete, onDelete, onEdit, onToggleSubtask }: TaskCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [showTimeDialog, setShowTimeDialog] = useState(false);
@@ -173,9 +174,7 @@ export function TaskCard({ task, onToggleComplete, onDelete, onEdit }: TaskCardP
                 <div key={subtask.id} className="flex items-center gap-2">
                   <Checkbox
                     checked={subtask.completed}
-                    onCheckedChange={() => {
-                      // Handle subtask toggle
-                    }}
+                    onCheckedChange={() => onToggleSubtask?.(subtask.id)}
                   />
                   <span
                     className={cn(

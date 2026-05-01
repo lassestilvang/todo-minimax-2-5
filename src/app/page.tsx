@@ -136,6 +136,19 @@ function HomeContent() {
     setIsTaskFormOpen(true);
   };
 
+  const handleToggleSubtask = (subtaskId: string) => {
+    startTransition(async () => {
+      try {
+        await actions.toggleSubtaskComplete(subtaskId);
+        // Refresh tasks to get updated subtask state
+        const tasksData = await actions.getTasks(currentView, currentListId);
+        setTasks(tasksData);
+      } catch (error) {
+        console.error("Failed to toggle subtask:", error);
+      }
+    });
+  };
+
   const handleSelectTaskFromSearch = (task: Task) => {
     setEditingTask(task);
     setIsTaskFormOpen(true);
@@ -257,6 +270,7 @@ function HomeContent() {
                       onToggleComplete={handleToggleComplete}
                       onDelete={handleDeleteTask}
                       onEdit={handleEditTask}
+                      onToggleSubtask={handleToggleSubtask}
                     />
                   </motion.div>
                 ))
