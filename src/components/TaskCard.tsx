@@ -5,7 +5,6 @@ import { format, isToday, isTomorrow, isPast, differenceInDays } from "date-fns"
 import {
   Check,
   Calendar,
-  Clock,
   Flag,
   Trash2,
   Edit2,
@@ -32,7 +31,6 @@ interface TaskCardProps {
 
 export function TaskCard({ task, onToggleComplete, onDelete, onEdit, onToggleSubtask }: TaskCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const [showTimeDialog, setShowTimeDialog] = useState(false);
 
   const isOverdue =
@@ -56,8 +54,6 @@ export function TaskCard({ task, onToggleComplete, onDelete, onEdit, onToggleSub
         "group relative rounded-lg border border-transparent bg-card dark:bg-[#1a1a1a] p-4 transition-all hover:border-border dark:hover:border-zinc-700",
         task.completed && "opacity-60"
       )}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
       <div className="flex items-start gap-3">
         {/* Checkbox */}

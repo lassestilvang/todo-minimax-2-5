@@ -13,25 +13,23 @@ import {
 } from "@/lib/timer-store";
 
 export function useTimer(taskId: string, userId: string) {
-  const [isRunning, setIsRunning] = useState(false);
-  const [elapsed, setElapsed] = useState(0); // seconds
-
-  useEffect(() => {
+  const [isRunning, setIsRunning] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const timers = getActiveTimers();
+    return timers.some((t) => t.taskId === taskId);
+  });
+  const [elapsed, setElapsed] = useState(() => {
+    if (typeof window === "undefined") return 0;
     const timers = getActiveTimers();
     const existingTimer = timers.find((t) => t.taskId === taskId);
-    if (existingTimer) {
-      setIsRunning(true);
-      setElapsed(getElapsedSeconds(existingTimer));
-    }
-  }, [taskId]);
+    return existingTimer ? getElapsedSeconds(existingTimer) : 0;
+  });
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isRunning) {
-      interval = setInterval(() => {
-        setElapsed((prev) => prev + 1);
-      }, 1000);
-    }
+    if (!isRunning) return;
+    const interval = setInterval(() => {
+      setElapsed((prev) => prev + 1);
+    }, 1000);
     return () => clearInterval(interval);
   }, [isRunning]);
 
