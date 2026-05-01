@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { format } from "date-fns";
-import { Play, Pause, Square, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,12 +13,10 @@ import {
 } from "@/components/ui/dialog";
 import { TimeTracker } from "@/components/time-tracker";
 import { TimeLogList } from "@/components/time-log-list";
-import { useTimer } from "@/hooks/use-timer";
 import {
   getTimeLogs,
   deleteTimeLog,
   addManualTimeEntry,
-  startTimer,
   stopTimer,
 } from "@/app/actions";
 import type { TimeLog } from "@/types";
@@ -40,13 +38,7 @@ export function TimeTrackingDialog({
   const [loadingLogs, setLoadingLogs] = useState(true);
   const [showManualForm, setShowManualForm] = useState(false);
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchTimeLogs();
-    }
-  }, [isOpen, taskId]);
-
-  const fetchTimeLogs = async () => {
+  const fetchTimeLogs = useCallback(async () => {
     setLoadingLogs(true);
     try {
       const logs = await getTimeLogs(taskId);
@@ -56,10 +48,15 @@ export function TimeTrackingDialog({
     } finally {
       setLoadingLogs(false);
     }
-  };
+  }, [taskId]);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchTimeLogs();
+    }
+  }, [isOpen, fetchTimeLogs]);
 
   const handleTimerStop = async (elapsedSeconds: number) => {
-    const durationMinutes = Math.round(elapsedSeconds / 60);
     try {
       await stopTimer(taskId, userId);
       fetchTimeLogs();
