@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useState, useRef } from "react";
-import { Upload, X, File, Image } from "lucide-react";
+import { Upload, X, File } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -9,19 +9,13 @@ import { Progress } from "@/components/ui/progress";
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 interface AttachmentUploadProps {
-  taskId: string;
+  taskId?: string;
   onUploadComplete?: (attachments: AttachmentInfo[]) => void;
   onError?: (error: string) => void;
 }
 
-interface AttachmentInfo {
-  file: File;
-  preview?: string;
-  id: string;
-}
-
 export function AttachmentUpload({
-  taskId,
+  taskId: _taskId,
   onUploadComplete,
   onError,
 }: AttachmentUploadProps) {
@@ -100,7 +94,7 @@ export function AttachmentUpload({
       const totalSteps = attachments.length;
       let completed = 0;
 
-      for (const att of attachments) {
+      for (let i = 0; i < attachments.length; i++) {
         // Simulate upload - in real implementation, you'd upload each file
         await new Promise((resolve) => setTimeout(resolve, 500));
         completed++;
