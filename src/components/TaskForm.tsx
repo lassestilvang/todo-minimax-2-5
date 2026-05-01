@@ -271,7 +271,6 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
             <div>
               <label className="text-sm font-medium">Attachments</label>
               <AttachmentUpload
-                taskId={task.id}
                 onUploadComplete={(attachments) => {
                   // Handle upload complete - typically you'd call a server action
                   console.log("Uploaded:", attachments);

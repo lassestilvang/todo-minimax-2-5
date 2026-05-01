@@ -8,14 +8,18 @@ import { Progress } from "@/components/ui/progress";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
+interface AttachmentInfo {
+  file: File;
+  preview?: string;
+  id: string;
+}
+
 interface AttachmentUploadProps {
-  taskId?: string;
   onUploadComplete?: (attachments: AttachmentInfo[]) => void;
   onError?: (error: string) => void;
 }
 
 export function AttachmentUpload({
-  taskId: _taskId,
   onUploadComplete,
   onError,
 }: AttachmentUploadProps) {

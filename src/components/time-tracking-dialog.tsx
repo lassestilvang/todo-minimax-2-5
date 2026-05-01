@@ -56,7 +56,7 @@ export function TimeTrackingDialog({
     }
   }, [isOpen, fetchTimeLogs]);
 
-  const handleTimerStop = async (elapsedSeconds: number) => {
+  const handleTimerStop = async () => {
     try {
       await stopTimer(taskId, userId);
       fetchTimeLogs();
