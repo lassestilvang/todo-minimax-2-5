@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo, memo } from "react";
 import { format, isToday, isTomorrow, isPast, differenceInDays } from "date-fns";
 import {
   Check,
@@ -29,24 +29,32 @@ interface TaskCardProps {
   onToggleSubtask?: (id: string) => void;
 }
 
-export function TaskCard({ task, onToggleComplete, onDelete, onEdit, onToggleSubtask }: TaskCardProps) {
+function TaskCardComponent({ task, onToggleComplete, onDelete, onEdit, onToggleSubtask }: TaskCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showTimeDialog, setShowTimeDialog] = useState(false);
 
-  const isOverdue =
-    task.dueDate && !task.completed && isPast(new Date(task.dueDate)) && !isToday(new Date(task.dueDate));
+  const isOverdue = useMemo(
+    () => task.dueDate && !task.completed && isPast(new Date(task.dueDate)) && !isToday(new Date(task.dueDate)),
+    [task.dueDate, task.completed]
+  );
 
-  const formatDueDate = (date: Date) => {
-    if (isToday(date)) return "Today";
-    if (isTomorrow(date)) return "Tomorrow";
-    const days = differenceInDays(date, new Date());
-    if (days < 0) return `${Math.abs(days)} days overdue`;
-    if (days <= 7) return `In ${days} days`;
-    return format(date, "MMM d");
-  };
+  const formatDueDate = useMemo(() => {
+    return (date: Date) => {
+      if (isToday(date)) return "Today";
+      if (isTomorrow(date)) return "Tomorrow";
+      const days = differenceInDays(date, new Date());
+      if (days < 0) return `${Math.abs(days)} days overdue`;
+      if (days <= 7) return `In ${days} days`;
+      return format(date, "MMM d");
+    };
+  }, []);
 
-  const completedSubtasks = task.subtasks?.filter((s) => s.completed).length || 0;
-  const totalSubtasks = task.subtasks?.length || 0;
+  const completedSubtasks = useMemo(
+    () => task.subtasks?.filter((s) => s.completed).length || 0,
+    [task.subtasks]
+  );
+
+  const totalSubtasks = useMemo(() => task.subtasks?.length || 0, [task.subtasks]);
 
   return (
     <div
@@ -231,3 +239,5 @@ export function TaskCard({ task, onToggleComplete, onDelete, onEdit, onToggleSub
     </div>
   );
 }
+
+export const TaskCard = memo(TaskCardComponent);
