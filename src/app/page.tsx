@@ -271,6 +271,7 @@ function HomeContent() {
                       onDelete={handleDeleteTask}
                       onEdit={handleEditTask}
                       onToggleSubtask={handleToggleSubtask}
+                      userId="default"
                     />
                   </motion.div>
                 ))

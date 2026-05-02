@@ -27,9 +27,10 @@ interface TaskCardProps {
   onDelete: (id: string) => void;
   onEdit: (task: Task) => void;
   onToggleSubtask?: (id: string) => void;
+  userId?: string;
 }
 
-function TaskCardComponent({ task, onToggleComplete, onDelete, onEdit, onToggleSubtask }: TaskCardProps) {
+function TaskCardComponent({ task, onToggleComplete, onDelete, onEdit, onToggleSubtask, userId = "default" }: TaskCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showTimeDialog, setShowTimeDialog] = useState(false);
 
@@ -233,7 +234,7 @@ function TaskCardComponent({ task, onToggleComplete, onDelete, onEdit, onToggleS
           taskId={task.id}
           isOpen={showTimeDialog}
           onClose={() => setShowTimeDialog(false)}
-          userId="current-user-id" // TODO: get from auth context
+          userId={userId}
         />
       )}
     </div>
