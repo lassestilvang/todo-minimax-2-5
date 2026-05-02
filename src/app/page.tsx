@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useTransition, Suspense } from "react";
+import React, { useState, useEffect, useTransition, Suspense, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { Plus, Eye, EyeOff } from "lucide-react";
@@ -73,14 +73,28 @@ function HomeContent() {
   const currentList = lists.find((l) => l.id === currentListId);
 
   // Filter tasks by completion status
-  const visibleTasks = showCompleted
-    ? tasks
-    : tasks.filter((t) => !t.completed);
+  const visibleTasks = useMemo(
+    () =>
+      showCompleted
+        ? tasks
+        : tasks.filter((t) => !t.completed),
+    [tasks, showCompleted]
+  );
 
   // Get overdue count
-  const overdueCount = tasks.filter(
-    (t) => !t.completed && t.dueDate && new Date(t.dueDate) < new Date()
-  ).length;
+  const overdueCount = useMemo(
+    () =>
+      tasks.filter(
+        (t) => !t.completed && t.dueDate && new Date(t.dueDate) < new Date()
+      ).length,
+    [tasks]
+  );
+
+  // Get completed count
+  const completedCount = useMemo(
+    () => tasks.filter((t) => t.completed).length,
+    [tasks]
+  );
 
   // Handlers
   const handleCreateTask = (data: TaskFormData) => {
@@ -235,9 +249,9 @@ function HomeContent() {
                 </>
               )}
             </button>
-            {tasks.filter((t) => t.completed).length > 0 && (
+            {completedCount > 0 && (
               <Badge variant="secondary">
-                {tasks.filter((t) => t.completed).length} completed
+                {completedCount} completed
               </Badge>
             )}
           </div>
