@@ -45,7 +45,7 @@ function HomeContent() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [listsData, labelsData, tasksData] = await Promise.all([
+        const [listsData, labelsData, tasksResult] = await Promise.all([
           actions.getLists(),
           actions.getLabels(),
           actions.getTasks(currentView, currentListId),
@@ -59,7 +59,7 @@ function HomeContent() {
         
         setLists(listsData);
         setLabels(labelsData);
-        setTasks(tasksData);
+        setTasks(Array.isArray(tasksResult) ? tasksResult : tasksResult.tasks);
       } catch (error) {
         console.error("Failed to load data:", error);
       } finally {
@@ -141,8 +141,8 @@ function HomeContent() {
       try {
         await actions.toggleSubtaskComplete(subtaskId);
         // Refresh tasks to get updated subtask state
-        const tasksData = await actions.getTasks(currentView, currentListId);
-        setTasks(tasksData);
+        const result = await actions.getTasks(currentView, currentListId);
+        setTasks(Array.isArray(result) ? result : result.tasks);
       } catch (error) {
         console.error("Failed to toggle subtask:", error);
       }

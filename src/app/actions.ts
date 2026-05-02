@@ -231,7 +231,7 @@ export async function deleteTask(id: string) {
   revalidatePath("/");
 }
 
-export async function getTasks(view?: string, listId?: string) {
+export async function getTasks(view?: string, listId?: string, cursor?: string, limit = 50) {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -273,6 +273,9 @@ export async function getTasks(view?: string, listId?: string) {
       { priority: "desc" },
       { createdAt: "desc" },
     ],
+    take: limit + 1,
+    cursor: cursor ? { id: cursor } : undefined,
+    skip: cursor ? 1 : 0,
     include: {
       labels: true,
       subtasks: { orderBy: { createdAt: "asc" } },
@@ -282,7 +285,13 @@ export async function getTasks(view?: string, listId?: string) {
     },
   });
 
-  return tasks;
+  let nextCursor: string | undefined;
+  if (tasks.length > limit) {
+    const nextItem = tasks.pop();
+    nextCursor = nextItem?.id;
+  }
+
+  return { tasks, nextCursor };
 }
 
 export async function getTaskById(id: string) {
