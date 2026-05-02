@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useTransition, Suspense, useMemo } from "react";
+import React, { useState, useEffect, useTransition, Suspense, useMemo, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { Plus, Eye, EyeOff } from "lucide-react";
@@ -97,7 +97,7 @@ function HomeContent() {
   );
 
   // Handlers
-  const handleCreateTask = (data: TaskFormData) => {
+  const handleCreateTask = useCallback((data: TaskFormData) => {
     startTransition(async () => {
       try {
         const newTask = await actions.createTask(data);
@@ -106,9 +106,9 @@ function HomeContent() {
         console.error("Failed to create task:", error);
       }
     });
-  };
+  }, []);
 
-  const handleUpdateTask = (data: TaskFormData) => {
+  const handleUpdateTask = useCallback((data: TaskFormData) => {
     if (!editingTask) return;
     startTransition(async () => {
       try {
@@ -119,9 +119,9 @@ function HomeContent() {
         console.error("Failed to update task:", error);
       }
     });
-  };
+  }, [editingTask]);
 
-  const handleToggleComplete = (id: string) => {
+  const handleToggleComplete = useCallback((id: string) => {
     startTransition(async () => {
       try {
         const updated = await actions.toggleTaskComplete(id);
@@ -132,9 +132,9 @@ function HomeContent() {
         console.error("Failed to toggle task:", error);
       }
     });
-  };
+  }, []);
 
-  const handleDeleteTask = (id: string) => {
+  const handleDeleteTask = useCallback((id: string) => {
     startTransition(async () => {
       try {
         await actions.deleteTask(id);
@@ -143,30 +143,29 @@ function HomeContent() {
         console.error("Failed to delete task:", error);
       }
     });
-  };
+  }, []);
 
-  const handleEditTask = (task: Task) => {
+  const handleEditTask = useCallback((task: Task) => {
     setEditingTask(task);
     setIsTaskFormOpen(true);
-  };
+  }, []);
 
-  const handleToggleSubtask = (subtaskId: string) => {
+  const handleToggleSubtask = useCallback((subtaskId: string) => {
     startTransition(async () => {
       try {
         await actions.toggleSubtaskComplete(subtaskId);
-        // Refresh tasks to get updated subtask state
         const result = await actions.getTasks(currentView, currentListId);
         setTasks(Array.isArray(result) ? result : result.tasks);
       } catch (error) {
         console.error("Failed to toggle subtask:", error);
       }
     });
-  };
+  }, [currentView, currentListId]);
 
-  const handleSelectTaskFromSearch = (task: Task) => {
+  const handleSelectTaskFromSearch = useCallback((task: Task) => {
     setEditingTask(task);
     setIsTaskFormOpen(true);
-  };
+  }, []);
 
   // Get page title
   const getPageTitle = () => {
