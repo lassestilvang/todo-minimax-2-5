@@ -12,9 +12,22 @@ interface SearchBarProps {
   onSelectTask: (task: Task) => void;
 }
 
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 export function SearchBar({ tasks, onSelectTask }: SearchBarProps) {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+
+  const debouncedQuery = useDebounce(query, 150);
 
   const fuse = useMemo(
     () =>
@@ -27,9 +40,9 @@ export function SearchBar({ tasks, onSelectTask }: SearchBarProps) {
   );
 
   const results = useMemo(() => {
-    if (!query.trim()) return [];
-    return fuse.search(query).slice(0, 5);
-  }, [query, fuse]);
+    if (!debouncedQuery.trim()) return [];
+    return fuse.search(debouncedQuery).slice(0, 5);
+  }, [debouncedQuery, fuse]);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
