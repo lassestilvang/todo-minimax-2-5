@@ -68,6 +68,8 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
       listId: "",
       labelIds: [],
       dueDate: undefined,
+      deadline: undefined,
+      reminder: undefined,
     },
   });
 
@@ -75,6 +77,10 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
   const watchedLabelIds = useWatch({ control, name: "labelIds" }) ?? [];
   // Watch dueDate from form
   const watchedDueDate = useWatch({ control, name: "dueDate" });
+  // Watch deadline from form
+  const watchedDeadline = useWatch({ control, name: "deadline" });
+  // Watch reminder from form
+  const watchedReminder = useWatch({ control, name: "reminder" });
 
   // Reset form when task changes
   React.useEffect(() => {
@@ -89,6 +95,8 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
           listId: task.listId || "",
           labelIds: task.labels?.map((l) => l.id) || [],
           dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
+          deadline: task.deadline ? new Date(task.deadline) : undefined,
+          reminder: task.reminder ? new Date(task.reminder) : undefined,
         });
       } else {
         reset({
@@ -100,6 +108,8 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
           listId: "",
           labelIds: [],
           dueDate: undefined,
+          deadline: undefined,
+          reminder: undefined,
         });
       }
     }
@@ -117,6 +127,8 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
     onSubmit({
       ...data,
       dueDate: watchedDueDate,
+      deadline: watchedDeadline,
+      reminder: watchedReminder,
       labelIds: watchedLabelIds,
     } as TaskFormData);
     onClose();
@@ -173,6 +185,50 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
               />
               {watchedDueDate && (
                 <Button type="button" variant="ghost" size="icon" onClick={() => setValue("dueDate", undefined)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Deadline */}
+          <div>
+            <label className="text-sm font-medium">Deadline</label>
+            <div className="mt-1 flex gap-2">
+              <Input
+                type="date"
+                value={watchedDeadline ? format(watchedDeadline, "yyyy-MM-dd") : ""}
+                onChange={(e) =>
+                  setValue("deadline", e.target.value ? new Date(e.target.value) : undefined, {
+                    shouldValidate: false,
+                  })
+                }
+                className="flex-1"
+              />
+              {watchedDeadline && (
+                <Button type="button" variant="ghost" size="icon" onClick={() => setValue("deadline", undefined)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Reminder */}
+          <div>
+            <label className="text-sm font-medium">Reminder</label>
+            <div className="mt-1 flex gap-2">
+              <Input
+                type="datetime-local"
+                value={watchedReminder ? format(watchedReminder, "yyyy-MM-dd'T'HH:mm") : ""}
+                onChange={(e) =>
+                  setValue("reminder", e.target.value ? new Date(e.target.value) : undefined, {
+                    shouldValidate: false,
+                  })
+                }
+                className="flex-1"
+              />
+              {watchedReminder && (
+                <Button type="button" variant="ghost" size="icon" onClick={() => setValue("reminder", undefined)}>
                   <X className="h-4 w-4" />
                 </Button>
               )}
