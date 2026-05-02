@@ -327,13 +327,8 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
             <div>
               <label className="text-sm font-medium">Attachments</label>
               <AttachmentUpload
-                onUploadComplete={(attachments) => {
-                  // Handle upload complete - typically you'd call a server action
-                  console.log("Uploaded:", attachments);
-                }}
-                onError={(error) => {
-                  console.error("Upload error:", error);
-                }}
+                onUploadComplete={() => {}}
+                onError={() => {}}
               />
               {/* Display existing attachments */}
               {task.attachments && task.attachments.length > 0 && (
@@ -341,7 +336,7 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
                   <AttachmentList
                     attachments={task.attachments}
                     onDelete={handleDeleteAttachment}
-                    onDownload={(id) => console.log("download", id)}
+                    onDownload={() => {}}
                   />
                 </div>
               )}
