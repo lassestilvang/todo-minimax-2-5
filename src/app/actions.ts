@@ -9,10 +9,14 @@ import { v4 as uuidv4 } from "uuid";
 
 // List Actions
 export async function createList(data: ListFormData) {
+  const name = data.name?.trim();
+  if (!name) {
+    throw new Error("List name is required");
+  }
   const list = await prisma.list.create({
     data: {
-      name: data.name,
-      emoji: data.emoji || null,
+      name,
+      emoji: data.emoji?.trim() || null,
       color: data.color || null,
       isDefault: false,
     },
@@ -73,10 +77,14 @@ export async function getOrCreateInbox() {
 
 // Label Actions
 export async function createLabel(data: LabelFormData) {
+  const name = data.name?.trim();
+  if (!name) {
+    throw new Error("Label name is required");
+  }
   const label = await prisma.label.create({
     data: {
-      name: data.name,
-      emoji: data.emoji || null,
+      name,
+      emoji: data.emoji?.trim() || null,
       color: data.color || null,
     },
   });
@@ -111,17 +119,22 @@ export async function getLabels() {
 
 // Task Actions
 export async function createTask(data: TaskFormData) {
+  const title = data.title?.trim();
+  if (!title) {
+    throw new Error("Task title is required");
+  }
+
   const task = await prisma.task.create({
     data: {
-      title: data.title,
-      description: data.description || null,
+      title,
+      description: data.description?.trim() || null,
       dueDate: data.dueDate || null,
       deadline: data.deadline || null,
       reminder: data.reminder || null,
       estimate: data.estimate || null,
       priority: data.priority || "NONE",
       recurringType: data.recurringType || null,
-      recurringCustom: data.recurringCustom || null,
+      recurringCustom: data.recurringCustom?.trim() || null,
       listId: data.listId || null,
       labels: data.labelIds ? { connect: data.labelIds.map((id) => ({ id })) } : undefined,
     },
@@ -534,15 +547,19 @@ async function deleteFile(filePath: string): Promise<void> {
 
 // Search
 export async function searchTasks(query: string) {
+  const trimmed = query.trim();
+  if (trimmed.length < 2) return [];
+
   const tasks = await prisma.task.findMany({
     where: {
       OR: [
-        { title: { contains: query } },
-        { description: { contains: query } },
+        { title: { contains: trimmed } },
+        { description: { contains: trimmed } },
       ],
     },
     include: { labels: true },
     orderBy: { createdAt: "desc" },
+    take: 50,
   });
   return tasks;
 }
