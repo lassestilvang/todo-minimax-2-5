@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, memo, useMemo } from "react";
 import { format } from "date-fns";
 import { Download, Trash2, File, Image, FileText, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ interface AttachmentListProps {
   onDownload?: (id: string) => void;
 }
 
-export function AttachmentList({
+function AttachmentListComponent({
   attachments,
   onDelete,
   onDownload,
@@ -27,7 +27,27 @@ export function AttachmentList({
     null
   );
 
-  const getFileIcon = (mimeType: string) => {
+  const getFileIcon = useMemo(
+    () => (mimeType: string) => {
+      if (mimeType.startsWith("image/")) {
+        return <Image className="h-5 w-5 text-blue-500" />;
+      }
+      if (mimeType === "application/pdf") {
+        return <FileText className="h-5 w-5 text-red-500" />;
+      }
+      return <File className="h-5 w-5 text-gray-500" />;
+    },
+    []
+  );
+
+  const formatFileSize = useMemo(
+    () => (bytes: number): string => {
+      if (bytes < 1024) return `${bytes} B`;
+      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+      return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    },
+    []
+  );
     if (mimeType.startsWith("image/")) {
       return <Image className="h-5 w-5 text-blue-500" />;
     }
@@ -35,22 +55,18 @@ export function AttachmentList({
       return <FileText className="h-5 w-5 text-red-500" />;
     }
     return <File className="h-5 w-5 text-gray-500" />;
-  };
+  }, []);
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
-
-  const handleDownload = (attachment: Attachment) => {
-    // In a real implementation, this would fetch the file from server
-    const link = document.createElement("a");
-    link.href = `/api/attachments/${attachment.id}/download`;
-    link.download = attachment.filename;
-    link.click();
-    onDownload?.(attachment.id);
-  };
+const handleDownload = useMemo(
+    () => (attachment: Attachment) => {
+      const link = document.createElement("a");
+      link.href = `/api/attachments/${attachment.id}/download`;
+      link.download = attachment.filename;
+      link.click();
+      onDownload?.(attachment.id);
+    },
+    [onDownload]
+  );
 
   if (attachments.length === 0) return null;
 
@@ -189,3 +205,5 @@ export function AttachmentList({
     </>
   );
 }
+
+export const AttachmentList = memo(AttachmentListComponent);
