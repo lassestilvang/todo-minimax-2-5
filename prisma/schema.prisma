@@ -58,6 +58,8 @@ model Label {
   color     String?
   tasks     Task[]   @relation("TaskLabels")
   createdAt DateTime @default(now())
+
+  @@index([name])
 }
 
 model Subtask {
@@ -67,6 +69,8 @@ model Subtask {
   taskId    String
   task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+
+  @@index([taskId])
 }
 
 model TaskLog {
@@ -76,6 +80,8 @@ model TaskLog {
   taskId    String
   task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+
+  @@index([taskId])
 }
 
 model TimeLog {
@@ -89,6 +95,10 @@ model TimeLog {
   notes       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([taskId])
+  @@index([userId])
+  @@index([startTime])
 }
 
 model Attachment {
@@ -100,6 +110,8 @@ model Attachment {
   size      Int      // in bytes
   mimeType  String
   createdAt DateTime @default(now())
+
+  @@index([taskId])
 }
 
 enum Priority {
