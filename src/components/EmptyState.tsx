@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { Inbox } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -9,7 +9,7 @@ interface EmptyStateProps {
   onAction?: () => void;
 }
 
-export function EmptyState({
+function EmptyStateComponent({
   title = "No tasks yet",
   description = "Create your first task to get started",
   actionLabel = "Create Task",
@@ -30,3 +30,5 @@ export function EmptyState({
     </div>
   );
 }
+
+export const EmptyState = memo(EmptyStateComponent);

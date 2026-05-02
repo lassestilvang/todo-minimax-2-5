@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { cn } from "@/lib/utils";
 
 interface LoadingSpinnerProps {
@@ -6,13 +6,13 @@ interface LoadingSpinnerProps {
   size?: "sm" | "md" | "lg";
 }
 
-export function LoadingSpinner({ className, size = "md" }: LoadingSpinnerProps) {
-  const sizeClasses = {
-    sm: "h-4 w-4",
-    md: "h-8 w-8",
-    lg: "h-12 w-12",
-  };
+const sizeClasses = {
+  sm: "h-4 w-4",
+  md: "h-8 w-8",
+  lg: "h-12 w-12",
+};
 
+function LoadingSpinnerComponent({ className, size = "md" }: LoadingSpinnerProps) {
   return (
     <div className={cn("flex items-center justify-center", className)}>
       <div
@@ -24,3 +24,5 @@ export function LoadingSpinner({ className, size = "md" }: LoadingSpinnerProps) 
     </div>
   );
 }
+
+export const LoadingSpinner = memo(LoadingSpinnerComponent);

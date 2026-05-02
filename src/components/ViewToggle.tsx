@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { memo } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type { ViewType } from "@/types";
@@ -16,7 +16,7 @@ const views: { id: ViewType; label: string }[] = [
   { id: "all", label: "All" },
 ];
 
-export function ViewToggle({ currentView }: ViewToggleProps) {
+function ViewToggleComponent({ currentView }: ViewToggleProps) {
   return (
     <div className="flex items-center gap-1 rounded-lg bg-muted p-1">
       {views.map((view) => (
@@ -36,3 +36,5 @@ export function ViewToggle({ currentView }: ViewToggleProps) {
     </div>
   );
 }
+
+export const ViewToggle = memo(ViewToggleComponent);
