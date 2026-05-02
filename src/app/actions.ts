@@ -26,11 +26,15 @@ export async function createList(data: ListFormData) {
 }
 
 export async function updateList(id: string, data: ListFormData) {
+  const name = data.name?.trim();
+  if (!name) {
+    throw new Error("List name is required");
+  }
   const list = await prisma.list.update({
     where: { id },
     data: {
-      name: data.name,
-      emoji: data.emoji || null,
+      name,
+      emoji: data.emoji?.trim() || null,
       color: data.color || null,
     },
   });
@@ -93,11 +97,15 @@ export async function createLabel(data: LabelFormData) {
 }
 
 export async function updateLabel(id: string, data: LabelFormData) {
+  const name = data.name?.trim();
+  if (!name) {
+    throw new Error("Label name is required");
+  }
   const label = await prisma.label.update({
     where: { id },
     data: {
-      name: data.name,
-      emoji: data.emoji || null,
+      name,
+      emoji: data.emoji?.trim() || null,
       color: data.color || null,
     },
   });
@@ -213,18 +221,12 @@ export async function toggleTaskComplete(id: string) {
 }
 
 export async function deleteTask(id: string) {
-  // Delete attachments first (files will be cleaned up by cascade or manually)
   const attachments = await prisma.attachment.findMany({
     where: { taskId: id },
   });
 
-  // Delete physical files
   for (const att of attachments) {
-    try {
-      await deleteFile(att.path);
-    } catch (error) {
-      console.error("Failed to delete file:", error);
-    }
+    await deleteFile(att.path);
   }
 
   await prisma.task.delete({ where: { id } });
@@ -534,12 +536,7 @@ export async function deleteAttachment(id: string) {
   const attachment = await prisma.attachment.findUnique({ where: { id } });
   if (!attachment) return;
 
-  // Delete physical file
-  try {
-    await deleteFile(attachment.path);
-  } catch (error) {
-    console.error("Failed to delete file:", error);
-  }
+  await deleteFile(attachment.path);
 
   await prisma.attachment.delete({ where: { id } });
   revalidatePath(`/tasks/${attachment.taskId}`);
@@ -550,7 +547,7 @@ async function deleteFile(filePath: string): Promise<void> {
   try {
     await unlink(filePath);
   } catch (error) {
-    console.error(`Failed to delete file ${filePath}:`, error);
+    // File already deleted or doesn't exist - non-fatal
   }
 }
 
