@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Play, Pause, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,35 +19,22 @@ export function ActiveTimersIndicator({ userId }: ActiveTimersIndicatorProps) {
   const [timers, setTimers] = useState<TimerData[]>([]);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  useEffect(() => {
-    const loadTimers = () => {
-      setTimers(getActiveTimers());
-    };
+  const loadTimers = useCallback(() => {
+    setTimers(getActiveTimers());
+  }, []);
 
+  useEffect(() => {
     loadTimers();
 
-    // Listen for storage events from other tabs
     const handleStorage = (e: StorageEvent) => {
       if (e.key === "active-timers") {
         loadTimers();
       }
     };
 
-    // Custom event for same-tab updates
-    const handleTimersChange = () => {
-      loadTimers();
-    };
-
     window.addEventListener("storage", handleStorage);
-    window.addEventListener("timers-change", handleTimersChange);
-    const interval = setInterval(loadTimers, 1000);
-
-    return () => {
-      window.removeEventListener("storage", handleStorage);
-      window.removeEventListener("timers-change", handleTimersChange);
-      clearInterval(interval);
-    };
-  }, []);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, [loadTimers]);
 
   const totalActive = timers.length;
 
