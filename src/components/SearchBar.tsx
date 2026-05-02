@@ -5,22 +5,12 @@ import Fuse from "fuse.js";
 import { Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import { useDebounce } from "@/hooks/use-debounce";
 import type { Task } from "@/types";
 
 interface SearchBarProps {
   tasks: Task[];
   onSelectTask: (task: Task) => void;
-}
-
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedValue(value), delay);
-    return () => clearTimeout(handler);
-  }, [value, delay]);
-
-  return debouncedValue;
 }
 
 export function SearchBar({ tasks, onSelectTask }: SearchBarProps) {
