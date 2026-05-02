@@ -43,6 +43,12 @@ model Task {
   attachments     Attachment[]
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
+
+  @@index([completed])
+  @@index([dueDate])
+  @@index([listId])
+  @@index([priority])
+  @@index([createdAt])
 }
 
 model Label {
