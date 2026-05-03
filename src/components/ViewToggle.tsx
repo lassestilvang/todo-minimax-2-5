@@ -23,6 +23,9 @@ function ViewToggleComponent({ currentView }: ViewToggleProps) {
         <Link
           key={view.id}
           href={`/?view=${view.id}`}
+          role="tab"
+          aria-selected={currentView === view.id}
+          aria-controls="task-list"
           className={cn(
             "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
             currentView === view.id
