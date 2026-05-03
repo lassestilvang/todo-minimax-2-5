@@ -18,7 +18,7 @@ const views: { id: ViewType; label: string }[] = [
 
 function ViewToggleComponent({ currentView }: ViewToggleProps) {
   return (
-    <div className="flex items-center gap-1 rounded-lg bg-muted p-1">
+    <div className="flex items-center gap-1 rounded-lg bg-muted p-1" role="tablist" aria-label="View filters">
       {views.map((view) => (
         <Link
           key={view.id}
@@ -37,4 +37,5 @@ function ViewToggleComponent({ currentView }: ViewToggleProps) {
   );
 }
 
+ViewToggleComponent.displayName = "ViewToggle";
 export const ViewToggle = memo(ViewToggleComponent);
