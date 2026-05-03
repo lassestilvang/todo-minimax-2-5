@@ -4,6 +4,40 @@ import * as React from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+function useFocusTrap(isOpen: boolean) {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+
+      const focusableElements = containerRef.current?.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+
+      if (!focusableElements || focusableElements.length === 0) return;
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (e.shiftKey && document.activeElement === firstElement) {
+        e.preventDefault();
+        lastElement.focus();
+      } else if (!e.shiftKey && document.activeElement === lastElement) {
+        e.preventDefault();
+        firstElement.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
+
+  return containerRef;
+}
+
 const Dialog = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & { open?: boolean; onOpenChange?: (open: boolean) => void }
@@ -74,30 +108,47 @@ DialogOverlay.displayName = "DialogOverlay";
 const DialogContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & { onClose?: () => void }
->(({ className, children, onClose, ...props }, ref) => (
-  <DialogPortal>
-    <DialogOverlay />
-    <div
-      ref={ref}
-      className={cn(
-        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 sm:rounded-lg",
-        className
-      )}
-      {...props}
-    >
-      {children}
-      {onClose && (
-        <button
-          onClick={onClose}
-          className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-        >
-          <X className="h-4 w-4" />
-          <span className="sr-only">Close</span>
-        </button>
-      )}
-    </div>
-  </DialogPortal>
-));
+>(({ className, children, onClose, ...props }, ref) => {
+  const [mounted, setMounted] = React.useState(false);
+  const focusTrapRef = useFocusTrap(mounted);
+  const combinedRef = (el: HTMLDivElement | null) => {
+    (focusTrapRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+    if (typeof ref === "function") ref(el);
+    else if (ref) ref.current = el;
+  };
+
+  React.useEffect(() => {
+    setMounted(true);
+    const firstInput = document.querySelector<HTMLInputElement>("#task-title-input");
+    firstInput?.focus();
+  }, []);
+
+  return (
+    <DialogPortal>
+      <DialogOverlay />
+      <div
+        ref={combinedRef}
+        className={cn(
+          "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 sm:rounded-lg",
+          className
+        )}
+        {...props}
+      >
+        {children}
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            aria-label="Close dialog"
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </button>
+        )}
+      </div>
+    </DialogPortal>
+  );
+});
 DialogContent.displayName = "DialogContent";
 
 const DialogHeader = ({

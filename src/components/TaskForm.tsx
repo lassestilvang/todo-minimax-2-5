@@ -159,6 +159,7 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
           {/* Title */}
           <div>
             <Input
+              id="task-title-input"
               {...register("title")}
               placeholder="Task title"
               autoComplete="off"
