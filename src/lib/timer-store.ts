@@ -58,7 +58,8 @@ export function broadcastTimersChange(): void {
 }
 
 export function getElapsedSeconds(timer: TimerData): number {
-  return timer.elapsed + (Date.now() - timer.startTime);
+  if (!timer || typeof timer.startTime !== "number") return 0;
+  return (timer.elapsed || 0) + (Date.now() - timer.startTime);
 }
 
 export function formatDuration(seconds: number): string {
