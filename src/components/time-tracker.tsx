@@ -43,18 +43,16 @@ export function TimeTracker({
         <span className="text-xs font-mono text-muted-foreground">
           {formattedTime}
         </span>
-        {isRunning ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6"
-            onClick={handleToggle}
-            aria-label={isRunning ? "Pause timer" : "Start timer"}
-          >
-            {isRunning ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
-          </Button>
-        )}
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          onClick={handleToggle}
+          aria-label={isRunning ? "Pause timer" : "Start timer"}
+        >
+          {isRunning ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+        </Button>
       </div>
     );
   }

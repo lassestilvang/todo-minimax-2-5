@@ -50,7 +50,7 @@ export function TimeTrackingDialog({
     } finally {
       setLoadingLogs(false);
     }
-  }, [taskId]);
+  }, [taskId, showToast]);
 
   useEffect(() => {
     if (isOpen) {

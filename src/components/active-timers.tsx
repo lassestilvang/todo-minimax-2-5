@@ -25,7 +25,8 @@ export function ActiveTimersIndicator({ userId }: ActiveTimersIndicatorProps) {
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
-    loadTimers();
+    const timeout = setTimeout(loadTimers, 0);
+    return () => clearTimeout(timeout);
 
     const handleStorage = (e: StorageEvent) => {
       if (e.key === "active-timers") {
