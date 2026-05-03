@@ -167,7 +167,7 @@ export async function updateTask(id: string, data: Partial<TaskFormData>) {
   const task = await prisma.task.update({
     where: { id },
     data: {
-      title: data.title,
+      title: data.title?.trim(),
       description: data.description !== undefined ? (data.description || null) : undefined,
       dueDate: data.dueDate !== undefined ? (data.dueDate || null) : undefined,
       deadline: data.deadline !== undefined ? (data.deadline || null) : undefined,
