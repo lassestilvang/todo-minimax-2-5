@@ -161,6 +161,7 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
             <Input
               {...register("title")}
               placeholder="Task title"
+              autoComplete="off"
               className={cn(errors.title && "border-destructive")}
             />
             {errors.title && (
