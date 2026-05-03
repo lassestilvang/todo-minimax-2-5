@@ -15,6 +15,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/toast";
 import type { Task, List, Label, TaskFormData, ViewType } from "@/types";
 import * as actions from "./actions";
 
@@ -28,6 +29,7 @@ export default function Home() {
 
 function HomeContent() {
   const searchParams = useSearchParams();
+  const { showToast } = useToast();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [lists, setLists] = useState<List[]>([]);
   const [labels, setLabels] = useState<Label[]>([]);
@@ -62,7 +64,7 @@ function HomeContent() {
         setLabels(labelsData);
         setTasks(Array.isArray(tasksResult) ? tasksResult : tasksResult.tasks);
       } catch (error) {
-        console.error("Failed to load data:", error);
+        showToast("Failed to load data");
       } finally {
         setIsLoading(false);
       }
@@ -104,7 +106,7 @@ function HomeContent() {
         const newTask = await actions.createTask(data);
         setTasks((prev) => [newTask, ...prev]);
       } catch (error) {
-        console.error("Failed to create task:", error);
+        showToast("Failed to create task");
       }
     });
   }, []);
@@ -117,7 +119,7 @@ function HomeContent() {
         setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
         setEditingTask(null);
       } catch (error) {
-        console.error("Failed to update task:", error);
+        showToast("Failed to update task");
       }
     });
   }, [editingTask]);
@@ -131,7 +133,7 @@ function HomeContent() {
           setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
         }
       } catch (error) {
-        console.error("Failed to toggle task:", error);
+        showToast("Failed to toggle task");
       } finally {
         setPendingAction(null);
       }
@@ -145,7 +147,7 @@ function HomeContent() {
         await actions.deleteTask(id);
         setTasks((prev) => prev.filter((t) => t.id !== id));
       } catch (error) {
-        console.error("Failed to delete task:", error);
+        showToast("Failed to delete task");
       } finally {
         setPendingAction(null);
       }
@@ -164,7 +166,7 @@ function HomeContent() {
         const result = await actions.getTasks(currentView, currentListId);
         setTasks(Array.isArray(result) ? result : result.tasks);
       } catch (error) {
-        console.error("Failed to toggle subtask:", error);
+        showToast("Failed to toggle subtask");
       }
     });
   }, [currentView, currentListId]);
