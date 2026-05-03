@@ -36,6 +36,7 @@ function HomeContent() {
   const [showCompleted, setShowCompleted] = useState(true);
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
 
   // Get params
   const currentView = (searchParams.get("view") as ViewType) || "all";
@@ -122,6 +123,7 @@ function HomeContent() {
   }, [editingTask]);
 
   const handleToggleComplete = useCallback((id: string) => {
+    setPendingAction(id);
     startTransition(async () => {
       try {
         const updated = await actions.toggleTaskComplete(id);
@@ -130,17 +132,22 @@ function HomeContent() {
         }
       } catch (error) {
         console.error("Failed to toggle task:", error);
+      } finally {
+        setPendingAction(null);
       }
     });
   }, []);
 
   const handleDeleteTask = useCallback((id: string) => {
+    setPendingAction(id);
     startTransition(async () => {
       try {
         await actions.deleteTask(id);
         setTasks((prev) => prev.filter((t) => t.id !== id));
       } catch (error) {
         console.error("Failed to delete task:", error);
+      } finally {
+        setPendingAction(null);
       }
     });
   }, []);
@@ -285,6 +292,7 @@ function HomeContent() {
                       onEdit={handleEditTask}
                       onToggleSubtask={handleToggleSubtask}
                       userId="default"
+                      isLoading={pendingAction === task.id}
                     />
                   </motion.div>
                 ))

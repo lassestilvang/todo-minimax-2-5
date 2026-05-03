@@ -12,6 +12,7 @@ import {
   ChevronUp,
   Paperclip,
   Timer,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -28,9 +29,10 @@ interface TaskCardProps {
   onEdit: (task: Task) => void;
   onToggleSubtask?: (id: string) => void;
   userId?: string;
+  isLoading?: boolean;
 }
 
-function TaskCardComponent({ task, onToggleComplete, onDelete, onEdit, onToggleSubtask, userId = "default" }: TaskCardProps) {
+function TaskCardComponent({ task, onToggleComplete, onDelete, onEdit, onToggleSubtask, userId = "default", isLoading }: TaskCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showTimeDialog, setShowTimeDialog] = useState(false);
 
@@ -66,11 +68,19 @@ function TaskCardComponent({ task, onToggleComplete, onDelete, onEdit, onToggleS
     >
       <div className="flex items-start gap-3">
         {/* Checkbox */}
-        <Checkbox
-          checked={task.completed}
-          onCheckedChange={() => onToggleComplete(task.id)}
-          className="mt-1 flex-shrink-0"
-        />
+        <div className="mt-1 flex-shrink-0 relative">
+          <Checkbox
+            checked={task.completed}
+            onCheckedChange={() => onToggleComplete(task.id)}
+            disabled={isLoading}
+            className={cn(isLoading && "opacity-50")}
+          />
+          {isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            </div>
+          )}
+        </div>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
