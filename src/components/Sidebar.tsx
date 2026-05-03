@@ -39,15 +39,16 @@ export function Sidebar({
     views: true,
     labels: true,
   });
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("theme");
-      if (stored === "light" || stored === "dark") {
-        return stored;
-      }
+  const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const stored = localStorage.getItem("theme");
+    if (stored === "light" || stored === "dark") {
+      setTheme(stored);
     }
-    return "dark";
-  });
+  }, []);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -77,9 +78,11 @@ export function Sidebar({
       <div className="flex items-center justify-between p-4 border-b border-border dark:border-zinc-800">
         <h1 className="text-xl font-bold">TaskFlow</h1>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={toggleTheme}>
-            {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-          </Button>
+          {mounted && (
+            <Button variant="ghost" size="icon" onClick={toggleTheme}>
+              {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"
