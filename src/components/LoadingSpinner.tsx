@@ -14,15 +14,17 @@ const sizeClasses = {
 
 function LoadingSpinnerComponent({ className, size = "md" }: LoadingSpinnerProps) {
   return (
-    <div className={cn("flex items-center justify-center", className)}>
+    <div className={cn("flex items-center justify-center", className)} role="status" aria-label="Loading">
       <div
         className={cn(
           "animate-spin rounded-full border-2 border-muted border-t-primary",
           sizeClasses[size]
         )}
       />
+      <span className="sr-only">Loading...</span>
     </div>
   );
 }
 
+LoadingSpinnerComponent.displayName = "LoadingSpinner";
 export const LoadingSpinner = memo(LoadingSpinnerComponent);

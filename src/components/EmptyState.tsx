@@ -31,4 +31,5 @@ function EmptyStateComponent({
   );
 }
 
+EmptyStateComponent.displayName = "EmptyState";
 export const EmptyState = memo(EmptyStateComponent);
