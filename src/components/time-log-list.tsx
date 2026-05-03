@@ -73,6 +73,7 @@ function TimeLogListComponent({ timeLogs, onDelete }: TimeLogListProps) {
                         size="icon"
                         className="h-8 w-8 text-destructive"
                         onClick={() => onDelete(log.id)}
+                        aria-label="Delete time log"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -88,4 +89,5 @@ function TimeLogListComponent({ timeLogs, onDelete }: TimeLogListProps) {
   );
 }
 
+TimeLogListComponent.displayName = "TimeLogList";
 export const TimeLogList = memo(TimeLogListComponent);
