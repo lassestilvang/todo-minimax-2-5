@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
 import type { Task, List, Label, TaskFormData, ViewType } from "@/types";
 import * as actions from "./actions";
+import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 
 export default function Home() {
   return (
@@ -39,6 +40,11 @@ function HomeContent() {
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
+
+  useKeyboardShortcuts([
+    { key: "n", ctrl: true, action: () => setIsTaskFormOpen(true) },
+    { key: "Escape", action: () => { setIsTaskFormOpen(false); setEditingTask(null); } },
+  ]);
 
   // Get params
   const currentView = (searchParams.get("view") as ViewType) || "all";
