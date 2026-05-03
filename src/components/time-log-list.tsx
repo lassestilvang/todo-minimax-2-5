@@ -43,10 +43,10 @@ function TimeLogListComponent({ timeLogs, onDelete }: TimeLogListProps) {
           <table className="w-full text-sm">
             <thead className="border-b bg-muted/50">
               <tr>
-                <th className="px-3 py-2 text-left font-medium">Date</th>
-                <th className="px-3 py-2 text-left font-medium">Duration</th>
-                <th className="px-3 py-2 text-left font-medium">Notes</th>
-                {onDelete && <th className="px-3 py-2 w-16"></th>}
+                <th scope="col" className="px-3 py-2 text-left font-medium">Date</th>
+                <th scope="col" className="px-3 py-2 text-left font-medium">Duration</th>
+                <th scope="col" className="px-3 py-2 text-left font-medium">Notes</th>
+                {onDelete && <th scope="col" className="px-3 py-2 w-16"></th>}
               </tr>
             </thead>
             <tbody>
