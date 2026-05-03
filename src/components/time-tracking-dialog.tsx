@@ -182,3 +182,5 @@ export function TimeTrackingDialog({
     </Dialog>
   );
 }
+
+TimeTrackingDialog.displayName = "TimeTrackingDialog";
