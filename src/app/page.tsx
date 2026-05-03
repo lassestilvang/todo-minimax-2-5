@@ -180,7 +180,7 @@ function HomeContent() {
   const handleSelectTaskFromSearch = useCallback((task: Task) => {
     setEditingTask(task);
     setIsTaskFormOpen(true);
-  }, []);
+  }, [showToast]);
 
   // Get page title
   const getPageTitle = () => {
