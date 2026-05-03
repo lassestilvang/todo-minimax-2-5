@@ -80,6 +80,7 @@ function AttachmentListComponent({
                   className="mb-2 cursor-pointer"
                   onClick={() => setPreviewAttachment(attachment)}
                 >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={`/api/attachments/${attachment.id}/thumbnail`}
                     alt={attachment.filename}
@@ -165,6 +166,7 @@ function AttachmentListComponent({
           </DialogHeader>
           <div className="flex items-center justify-center bg-muted/50 rounded-lg p-4 max-h-[70vh] overflow-auto">
             {previewAttachment?.mimeType.startsWith("image/") ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
               <img
                 src={`/api/attachments/${previewAttachment.id}/download`}
                 alt={previewAttachment.filename}
