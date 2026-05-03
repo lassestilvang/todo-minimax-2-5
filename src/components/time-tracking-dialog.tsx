@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { TimeTracker } from "@/components/time-tracker";
 import { TimeLogList } from "@/components/time-log-list";
+import { useToast } from "@/components/ui/toast";
 import {
   getTimeLogs,
   deleteTimeLog,
@@ -34,6 +35,7 @@ export function TimeTrackingDialog({
   onClose,
   userId,
 }: TimeTrackingDialogProps) {
+  const { showToast } = useToast();
   const [timeLogs, setTimeLogs] = useState<TimeLog[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(true);
   const [showManualForm, setShowManualForm] = useState(false);
@@ -44,7 +46,7 @@ export function TimeTrackingDialog({
       const logs = await getTimeLogs(taskId);
       setTimeLogs(logs);
     } catch (error) {
-      console.error("Failed to fetch time logs:", error);
+      showToast("Failed to fetch time logs");
     } finally {
       setLoadingLogs(false);
     }
@@ -61,7 +63,7 @@ export function TimeTrackingDialog({
       await stopTimer(taskId, userId);
       fetchTimeLogs();
     } catch (error) {
-      console.error("Failed to stop timer:", error);
+      showToast("Failed to stop timer");
     }
   };
 
@@ -71,7 +73,7 @@ export function TimeTrackingDialog({
       await deleteTimeLog(id);
       fetchTimeLogs();
     } catch (error) {
-      console.error("Failed to delete time log:", error);
+      showToast("Failed to delete time log");
     }
   };
 
@@ -89,7 +91,7 @@ export function TimeTrackingDialog({
       setShowManualForm(false);
       fetchTimeLogs();
     } catch (error) {
-      console.error("Failed to add manual time:", error);
+      showToast("Failed to add manual time");
     }
   };
 
