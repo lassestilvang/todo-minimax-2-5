@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useState, useRef } from "react";
+import Image from "next/image";
 import { Upload, X, File } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -19,7 +20,7 @@ interface AttachmentUploadProps {
   onError?: (error: string) => void;
 }
 
-export function AttachmentUpload({
+function AttachmentUploadComponent({
   onUploadComplete,
   onError,
 }: AttachmentUploadProps) {
@@ -160,11 +161,14 @@ export function AttachmentUpload({
                 className="flex items-center gap-3 rounded-lg border p-3"
               >
                 {attachment.preview ? (
-                  <img
-                    src={attachment.preview}
-                    alt={attachment.file.name}
-                    className="h-12 w-12 rounded object-cover"
-                  />
+                  <div className="relative h-12 w-12 rounded overflow-hidden">
+                    <Image
+                      src={attachment.preview}
+                      alt={attachment.file.name}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
                 ) : (
                   <div className="flex h-12 w-12 items-center justify-center rounded bg-muted">
                     <File className="h-6 w-6 text-muted-foreground" />
@@ -212,4 +216,8 @@ export function AttachmentUpload({
       )}
     </div>
   );
+}
+
+export function AttachmentUpload(props: AttachmentUploadProps) {
+  return <AttachmentUploadComponent {...props} />;
 }
