@@ -50,20 +50,9 @@ export function TimeTracker({
             size="icon"
             className="h-6 w-6"
             onClick={handleToggle}
-            title="Pause"
+            aria-label={isRunning ? "Pause timer" : "Start timer"}
           >
-            <Pause className="h-3 w-3" />
-          </Button>
-        ) : (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6"
-            onClick={handleToggle}
-            title="Start"
-          >
-            <Play className="h-3 w-3" />
+            {isRunning ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
           </Button>
         )}
       </div>
@@ -86,6 +75,7 @@ export function TimeTracker({
               size="sm"
               onClick={stop}
               className="gap-1.5"
+              aria-label="Pause timer"
             >
               <Pause className="h-4 w-4" />
               Pause
@@ -96,6 +86,7 @@ export function TimeTracker({
               size="sm"
               onClick={handleStop}
               className="gap-1.5"
+              aria-label="Stop timer"
             >
               <Square className="h-4 w-4" />
               Stop
@@ -107,6 +98,7 @@ export function TimeTracker({
             size="sm"
             onClick={handleToggle}
             className="gap-1.5"
+            aria-label="Start timer"
           >
             <Play className="h-4 w-4" />
             Start
