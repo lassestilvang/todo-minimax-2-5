@@ -68,7 +68,8 @@ export function SearchBar({ tasks, onSelectTask }: SearchBarProps) {
   }, [handleKeyDown]);
 
   useEffect(() => {
-    setSelectedIndex(-1);
+    const timeout = setTimeout(() => setSelectedIndex(-1), 0);
+    return () => clearTimeout(timeout);
   }, [query]);
 
   const handleClickOutside = useCallback((e: MouseEvent) => {
