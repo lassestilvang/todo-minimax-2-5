@@ -62,9 +62,10 @@ export function getElapsedSeconds(timer: TimerData): number {
 }
 
 export function formatDuration(seconds: number): string {
-  const hrs = Math.floor(seconds / 3600);
-  const mins = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
+  const safeSeconds = Math.max(0, Math.floor(seconds));
+  const hrs = Math.floor(safeSeconds / 3600);
+  const mins = Math.floor((safeSeconds % 3600) / 60);
+  const secs = safeSeconds % 60;
 
   if (hrs > 0) {
     return `${hrs.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
@@ -73,7 +74,8 @@ export function formatDuration(seconds: number): string {
 }
 
 export function formatDurationShort(seconds: number): string {
-  const totalMinutes = Math.floor(seconds / 60);
+  const safeSeconds = Math.max(0, Math.floor(seconds));
+  const totalMinutes = Math.floor(safeSeconds / 60);
   const hrs = Math.floor(totalMinutes / 60);
   const mins = totalMinutes % 60;
 
