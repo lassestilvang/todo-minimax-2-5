@@ -45,7 +45,7 @@ export function TimeTrackingDialog({
     try {
       const logs = await getTimeLogs(taskId);
       setTimeLogs(logs);
-    } catch (error) {
+    } catch {
       showToast("Failed to fetch time logs");
     } finally {
       setLoadingLogs(false);
@@ -62,7 +62,7 @@ export function TimeTrackingDialog({
     try {
       await stopTimer(taskId, userId);
       fetchTimeLogs();
-    } catch (error) {
+    } catch {
       showToast("Failed to stop timer");
     }
   };
@@ -72,7 +72,7 @@ export function TimeTrackingDialog({
     try {
       await deleteTimeLog(id);
       fetchTimeLogs();
-    } catch (error) {
+    } catch {
       showToast("Failed to delete time log");
     }
   };
@@ -90,7 +90,7 @@ export function TimeTrackingDialog({
       await addManualTimeEntry(taskId, date, duration, notes || undefined);
       setShowManualForm(false);
       fetchTimeLogs();
-    } catch (error) {
+    } catch {
       showToast("Failed to add manual time");
     }
   };

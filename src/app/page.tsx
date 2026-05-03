@@ -69,7 +69,7 @@ function HomeContent() {
         setLists(listsData);
         setLabels(labelsData);
         setTasks(Array.isArray(tasksResult) ? tasksResult : tasksResult.tasks);
-      } catch (error) {
+      } catch {
         showToast("Failed to load data");
       } finally {
         setIsLoading(false);
@@ -111,11 +111,11 @@ function HomeContent() {
       try {
         const newTask = await actions.createTask(data);
         setTasks((prev) => [newTask, ...prev]);
-      } catch (error) {
+      } catch {
         showToast("Failed to create task");
       }
     });
-  }, []);
+  }, [showToast]);
 
   const handleUpdateTask = useCallback((data: TaskFormData) => {
     if (!editingTask) return;
@@ -124,11 +124,11 @@ function HomeContent() {
         const updated = await actions.updateTask(editingTask.id, data);
         setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
         setEditingTask(null);
-      } catch (error) {
+      } catch {
         showToast("Failed to update task");
       }
     });
-  }, [editingTask]);
+  }, [editingTask, showToast]);
 
   const handleToggleComplete = useCallback((id: string) => {
     setPendingAction(id);
@@ -138,13 +138,13 @@ function HomeContent() {
         if (updated) {
           setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
         }
-      } catch (error) {
+      } catch {
         showToast("Failed to toggle task");
       } finally {
         setPendingAction(null);
       }
     });
-  }, []);
+  }, [showToast]);
 
   const handleDeleteTask = useCallback((id: string) => {
     setPendingAction(id);
@@ -152,13 +152,13 @@ function HomeContent() {
       try {
         await actions.deleteTask(id);
         setTasks((prev) => prev.filter((t) => t.id !== id));
-      } catch (error) {
+      } catch {
         showToast("Failed to delete task");
       } finally {
         setPendingAction(null);
       }
     });
-  }, []);
+  }, [showToast]);
 
   const handleEditTask = useCallback((task: Task) => {
     setEditingTask(task);
@@ -171,11 +171,11 @@ function HomeContent() {
         await actions.toggleSubtaskComplete(subtaskId);
         const result = await actions.getTasks(currentView, currentListId);
         setTasks(Array.isArray(result) ? result : result.tasks);
-      } catch (error) {
+      } catch {
         showToast("Failed to toggle subtask");
       }
     });
-  }, [currentView, currentListId]);
+  }, [currentView, currentListId, showToast]);
 
   const handleSelectTaskFromSearch = useCallback((task: Task) => {
     setEditingTask(task);

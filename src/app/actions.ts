@@ -546,7 +546,7 @@ export async function deleteAttachment(id: string) {
 async function deleteFile(filePath: string): Promise<void> {
   try {
     await unlink(filePath);
-  } catch (error) {
+  } catch {
     // File already deleted or doesn't exist - non-fatal
   }
 }

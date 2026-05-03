@@ -198,4 +198,5 @@ function AttachmentListComponent({
   );
 }
 
+AttachmentListComponent.displayName = "AttachmentList";
 export const AttachmentList = memo(AttachmentListComponent);

@@ -23,6 +23,7 @@ export function ActiveTimersIndicator({ userId }: ActiveTimersIndicatorProps) {
     setTimers(getActiveTimers());
   }, []);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     loadTimers();
 

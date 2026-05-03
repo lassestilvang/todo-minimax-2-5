@@ -111,17 +111,18 @@ const DialogContent = React.forwardRef<
 >(({ className, children, onClose, ...props }, ref) => {
   const [mounted, setMounted] = React.useState(false);
   const focusTrapRef = useFocusTrap(mounted);
-  const combinedRef = (el: HTMLDivElement | null) => {
-    (focusTrapRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
-    if (typeof ref === "function") ref(el);
-    else if (ref) ref.current = el;
-  };
 
   React.useEffect(() => {
     setMounted(true);
     const firstInput = document.querySelector<HTMLInputElement>("#task-title-input");
     firstInput?.focus();
   }, []);
+
+  const combinedRef = React.useCallback((el: HTMLDivElement | null) => {
+    focusTrapRef.current = el;
+    if (typeof ref === "function") ref(el);
+    else if (ref) ref.current = el;
+  }, [ref, focusTrapRef]);
 
   return (
     <DialogPortal>

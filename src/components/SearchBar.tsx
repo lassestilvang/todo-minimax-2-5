@@ -67,6 +67,7 @@ export function SearchBar({ tasks, onSelectTask }: SearchBarProps) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     setSelectedIndex(-1);
   }, [query]);
