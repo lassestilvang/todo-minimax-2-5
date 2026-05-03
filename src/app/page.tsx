@@ -76,7 +76,7 @@ function HomeContent() {
       }
     }
     loadData();
-  }, [currentView, currentListId]);
+  }, [currentView, currentListId, showToast]);
 
   // Get current list
   const currentList = lists.find((l) => l.id === currentListId);
@@ -180,7 +180,7 @@ function HomeContent() {
   const handleSelectTaskFromSearch = useCallback((task: Task) => {
     setEditingTask(task);
     setIsTaskFormOpen(true);
-  }, [showToast]);
+  }, []);
 
   // Get page title
   const getPageTitle = () => {
