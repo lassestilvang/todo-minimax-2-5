@@ -1,8 +1,9 @@
 "use client";
 
+/* eslint-disable react/display-name */
 import React, { useState, memo, useMemo } from "react";
 import { format } from "date-fns";
-import { Download, Trash2, File, Image, FileText, X } from "lucide-react";
+import { Download, Trash2, File, Image as ImageIcon, FileText, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,7 +31,7 @@ function AttachmentListComponent({
   const getFileIcon = useMemo(
     () => (mimeType: string) => {
       if (mimeType.startsWith("image/")) {
-        return <Image className="h-5 w-5 text-blue-500" />;
+        return <ImageIcon className="h-5 w-5 text-blue-500" />;
       }
       if (mimeType === "application/pdf") {
         return <FileText className="h-5 w-5 text-red-500" />;
@@ -113,7 +114,7 @@ function AttachmentListComponent({
                     onClick={() => setPreviewAttachment(attachment)}
                     title="Preview"
                   >
-                    <Image className="h-4 w-4" />
+                    <ImageIcon className="h-4 w-4" />
                   </Button>
                 ) : (
                   <Button
