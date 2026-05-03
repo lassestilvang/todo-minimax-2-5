@@ -158,12 +158,13 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           {/* Title */}
           <div>
+            <label htmlFor="task-title-input" className="text-sm font-medium">Title</label>
             <Input
               id="task-title-input"
               {...register("title")}
               placeholder="Task title"
               autoComplete="off"
-              className={cn(errors.title && "border-destructive")}
+              className={cn("mt-1", errors.title && "border-destructive")}
             />
             {errors.title && (
               <p className="mt-1 text-sm text-destructive">{errors.title.message}</p>
@@ -172,14 +173,22 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
 
           {/* Description */}
           <div>
-            <Textarea {...register("description")} placeholder="Add a description..." rows={3} />
+            <label htmlFor="task-description" className="text-sm font-medium">Description</label>
+            <Textarea
+              id="task-description"
+              {...register("description")}
+              placeholder="Add a description..."
+              rows={3}
+              className="mt-1"
+            />
           </div>
 
           {/* Due Date */}
           <div>
-            <label className="text-sm font-medium">Due Date</label>
+            <label htmlFor="task-due-date" className="text-sm font-medium">Due Date</label>
             <div className="mt-1 flex gap-2">
               <Input
+                id="task-due-date"
                 type="date"
                 value={watchedDueDate ? format(watchedDueDate, "yyyy-MM-dd") : ""}
                 onChange={(e) => handleDueDateChange(e.target.value)}
@@ -195,9 +204,10 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
 
           {/* Deadline */}
           <div>
-            <label className="text-sm font-medium">Deadline</label>
+            <label htmlFor="task-deadline" className="text-sm font-medium">Deadline</label>
             <div className="mt-1 flex gap-2">
               <Input
+                id="task-deadline"
                 type="date"
                 value={watchedDeadline ? format(watchedDeadline, "yyyy-MM-dd") : ""}
                 onChange={(e) =>
@@ -217,9 +227,10 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
 
           {/* Reminder */}
           <div>
-            <label className="text-sm font-medium">Reminder</label>
+            <label htmlFor="task-reminder" className="text-sm font-medium">Reminder</label>
             <div className="mt-1 flex gap-2">
               <Input
+                id="task-reminder"
                 type="datetime-local"
                 value={watchedReminder ? format(watchedReminder, "yyyy-MM-dd'T'HH:mm") : ""}
                 onChange={(e) =>
