@@ -46,18 +46,10 @@ function AttachmentListComponent({
       if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
       return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
     },
-    []
+[]
   );
-    if (mimeType.startsWith("image/")) {
-      return <Image className="h-5 w-5 text-blue-500" />;
-    }
-    if (mimeType === "application/pdf") {
-      return <FileText className="h-5 w-5 text-red-500" />;
-    }
-    return <File className="h-5 w-5 text-gray-500" />;
-  }, []);
 
-const handleDownload = useMemo(
+  const handleDownload = useMemo(
     () => (attachment: Attachment) => {
       const link = document.createElement("a");
       link.href = `/api/attachments/${attachment.id}/download`;
