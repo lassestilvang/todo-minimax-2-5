@@ -144,7 +144,7 @@ function TaskCardComponent({ task, onToggleComplete, onDelete, onEdit, onToggleS
                   type="button"
                   onClick={() => setShowTimeDialog(true)}
                   className="flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs hover:bg-muted/80 transition-colors"
-                  title="Track time"
+                  aria-label="Track time"
                 >
                   <Timer className="h-3 w-3" />
                   {task.estimate && (
@@ -202,6 +202,7 @@ function TaskCardComponent({ task, onToggleComplete, onDelete, onEdit, onToggleS
             size="icon"
             className="h-8 w-8"
             onClick={() => setIsExpanded(!isExpanded)}
+            aria-label={isExpanded ? "Collapse task" : "Expand task"}
           >
             {isExpanded ? (
               <ChevronUp className="h-4 w-4" />
@@ -214,6 +215,7 @@ function TaskCardComponent({ task, onToggleComplete, onDelete, onEdit, onToggleS
             size="icon"
             className="h-8 w-8"
             onClick={() => onEdit(task)}
+            aria-label="Edit task"
           >
             <Edit2 className="h-4 w-4" />
           </Button>
@@ -222,6 +224,7 @@ function TaskCardComponent({ task, onToggleComplete, onDelete, onEdit, onToggleS
             size="icon"
             className="h-8 w-8 text-destructive hover:text-destructive"
             onClick={() => onDelete(task.id)}
+            aria-label="Delete task"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
