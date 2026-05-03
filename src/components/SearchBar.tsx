@@ -16,6 +16,7 @@ interface SearchBarProps {
 export function SearchBar({ tasks, onSelectTask }: SearchBarProps) {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
 
   const debouncedQuery = useDebounce(query, 150);
 
@@ -40,13 +41,35 @@ export function SearchBar({ tasks, onSelectTask }: SearchBarProps) {
     if (e.key === "Escape" && isOpen) {
       setIsOpen(false);
       setQuery("");
+      setSelectedIndex(-1);
     }
-  }, [isOpen]);
+
+    if (!isOpen || results.length === 0) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev < results.length - 1 ? prev + 1 : 0));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : results.length - 1));
+    } else if (e.key === "Enter" && selectedIndex >= 0) {
+      e.preventDefault();
+      const task = results[selectedIndex].item;
+      onSelectTask(task);
+      setQuery("");
+      setIsOpen(false);
+      setSelectedIndex(-1);
+    }
+  }, [isOpen, results, selectedIndex, onSelectTask]);
 
   useEffect(() => {
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
+
+  useEffect(() => {
+    setSelectedIndex(-1);
+  }, [query]);
 
   const handleClickOutside = useCallback((e: MouseEvent) => {
     if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -90,7 +113,7 @@ export function SearchBar({ tasks, onSelectTask }: SearchBarProps) {
       {/* Search Results */}
       {isOpen && results.length > 0 && (
         <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover p-1 shadow-md animate-fade-in">
-          {results.map(({ item: task }) => (
+          {results.map(({ item: task }, index) => (
             <button
               key={task.id}
               onClick={() => {
@@ -98,7 +121,12 @@ export function SearchBar({ tasks, onSelectTask }: SearchBarProps) {
                 setQuery("");
                 setIsOpen(false);
               }}
-              className="flex w-full items-center gap-3 rounded-sm px-2 py-2 text-sm hover:bg-accent hover:text-accent-foreground text-left"
+              className={cn(
+                "flex w-full items-center gap-3 rounded-sm px-2 py-2 text-sm text-left",
+                index === selectedIndex
+                  ? "bg-accent text-accent-foreground"
+                  : "hover:bg-accent hover:text-accent-foreground"
+              )}
             >
               <span
                 className={cn(
