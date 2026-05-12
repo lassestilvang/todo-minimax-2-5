@@ -495,8 +495,6 @@ export async function uploadAttachment(
 }
 
 export async function uploadAttachments(taskId: string, formData: FormData) {
-  "use server";
-
   const files = formData.getAll("files") as File[];
   const results = [];
 
