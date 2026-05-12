@@ -1,6 +1,6 @@
 "use client";
 
-import React, { memo, useMemo } from "react";
+import React, { memo } from "react";
 import { format } from "date-fns";
 import { Clock, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,23 +12,17 @@ interface TimeLogListProps {
 }
 
 function TimeLogListComponent({ timeLogs, onDelete }: TimeLogListProps) {
-  const formatDuration = useMemo(
-    () => (minutes: number | null): string => {
-      if (!minutes) return "0m";
-      const hrs = Math.floor(minutes / 60);
-      const mins = minutes % 60;
-      if (hrs > 0) {
-        return `${hrs}h ${mins}m`;
-      }
-      return `${mins}m`;
-    },
-    []
-  );
+  const formatDuration = (minutes: number | null): string => {
+    if (!minutes) return "0m";
+    const hrs = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (hrs > 0) {
+      return `${hrs}h ${mins}m`;
+    }
+    return `${mins}m`;
+  };
 
-  const formatDateTime = useMemo(
-    () => (date: Date) => format(new Date(date), "MMM d, yyyy HH:mm"),
-    []
-  );
+  const formatDateTime = (date: Date) => format(new Date(date), "MMM d, yyyy HH:mm");
 
   return (
     <div className="space-y-2">
