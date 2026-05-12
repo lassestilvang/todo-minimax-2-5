@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useCallback } from "react";
 import { Play, Pause, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -23,19 +23,19 @@ export function TimeTracker({
 }: TimeTrackerProps) {
   const { isRunning, formattedTime, start, stop } = useTimer(taskId, userId);
 
-  const handleToggle = () => {
+  const handleToggle = useCallback(() => {
     if (isRunning) {
       const elapsed = stop();
       onTimerStop?.(elapsed);
     } else {
       start();
     }
-  };
+  }, [isRunning, start, stop, onTimerStop]);
 
-  const handleStop = () => {
+  const handleStop = useCallback(() => {
     const elapsed = stop();
     onTimerStop?.(elapsed);
-  };
+  }, [stop, onTimerStop]);
 
   if (compact) {
     return (
