@@ -79,7 +79,7 @@ function AttachmentUploadComponent({
     }
   }, [handleFiles]);
 
-  const removeAttachment = (id: string) => {
+  const removeAttachment = useCallback((id: string) => {
     setAttachments((prev) => {
       const attachment = prev.find((a) => a.id === id);
       if (attachment?.preview) {
@@ -87,7 +87,7 @@ function AttachmentUploadComponent({
       }
       return prev.filter((a) => a.id !== id);
     });
-  };
+  }, []);
 
   const handleUpload = async () => {
     if (attachments.length === 0) return;
