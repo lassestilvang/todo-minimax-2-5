@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import {
   Inbox,
@@ -17,6 +17,13 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import type { List, Label } from "@/types";
+
+const VIEWS = [
+  { id: "today", label: "Today", icon: Calendar, href: "/?view=today" },
+  { id: "week", label: "Next 7 Days", icon: Calendar, href: "/?view=week" },
+  { id: "upcoming", label: "Upcoming", icon: Calendar, href: "/?view=upcoming" },
+  { id: "all", label: "All Tasks", icon: Inbox, href: "/?view=all" },
+];
 
 interface SidebarProps {
   lists: List[];
@@ -71,13 +78,6 @@ export function Sidebar({
     document.documentElement.classList.toggle("dark", newTheme === "dark");
   };
 
-  const views = [
-    { id: "today", label: "Today", icon: Calendar, href: "/?view=today" },
-    { id: "week", label: "Next 7 Days", icon: Calendar, href: "/?view=week" },
-    { id: "upcoming", label: "Upcoming", icon: Calendar, href: "/?view=upcoming" },
-    { id: "all", label: "All Tasks", icon: Inbox, href: "/?view=all" },
-  ];
-
   const sidebarContent = (
     <div className="flex flex-col h-full bg-card dark:bg-[#1a1a1a] border-r border-border dark:border-zinc-800">
       {/* Header */}
@@ -117,7 +117,7 @@ export function Sidebar({
           </button>
           {expandedSections.views && (
             <div className="mt-1 space-y-1 animate-fade-in">
-              {views.map((view) => {
+              {VIEWS.map((view) => {
                 const isActive = currentView === view.id;
                 return (
                   <Link
