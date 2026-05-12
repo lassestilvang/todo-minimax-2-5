@@ -67,10 +67,6 @@ export function SearchBar({ tasks, onSelectTask }: SearchBarProps) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
-  useEffect(() => {
-    setSelectedIndex(-1);
-  }, [query]);
-
   const handleClickOutside = useCallback((e: MouseEvent) => {
     if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
       setIsOpen(false);
@@ -93,6 +89,7 @@ export function SearchBar({ tasks, onSelectTask }: SearchBarProps) {
           onChange={(e) => {
             setQuery(e.target.value);
             setIsOpen(true);
+            setSelectedIndex(-1);
           }}
           onFocus={() => setIsOpen(true)}
           className="pl-9 pr-10"
