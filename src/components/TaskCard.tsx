@@ -41,16 +41,14 @@ function TaskCardComponent({ task, onToggleComplete, onDelete, onEdit, onToggleS
     [task.dueDate, task.completed]
   );
 
-  const formatDueDate = useMemo(() => {
-    return (date: Date) => {
-      if (isToday(date)) return "Today";
-      if (isTomorrow(date)) return "Tomorrow";
-      const days = differenceInDays(date, new Date());
-      if (days < 0) return `${Math.abs(days)} days overdue`;
-      if (days <= 7) return `In ${days} days`;
-      return format(date, "MMM d");
-    };
-  }, []);
+  const formatDueDate = (date: Date) => {
+    if (isToday(date)) return "Today";
+    if (isTomorrow(date)) return "Tomorrow";
+    const days = differenceInDays(date, new Date());
+    if (days < 0) return `${Math.abs(days)} days overdue`;
+    if (days <= 7) return `In ${days} days`;
+    return format(date, "MMM d");
+  };
 
   const completedSubtasks = useMemo(
     () => task.subtasks?.filter((s) => s.completed).length || 0,
