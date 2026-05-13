@@ -16,7 +16,11 @@ interface ActiveTimersIndicatorProps {
 }
 
 export function ActiveTimersIndicator({ userId }: ActiveTimersIndicatorProps) {
-  const [timers, setTimers] = useState<TimerData[]>([]);
+  const [timers, setTimers] = useState<TimerData[]>(() => {
+    if (typeof window === "undefined") return [];
+    return getActiveTimers();
+  });
+  const [isLoaded, setIsLoaded] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
   const loadTimers = useCallback(() => {
@@ -24,8 +28,8 @@ export function ActiveTimersIndicator({ userId }: ActiveTimersIndicatorProps) {
   }, []);
 
   useEffect(() => {
-    const timeout = setTimeout(loadTimers, 0);
-    return () => clearTimeout(timeout);
+    loadTimers();
+    setIsLoaded(true);
 
     const handleStorage = (e: StorageEvent) => {
       if (e.key === "active-timers") {
@@ -39,7 +43,7 @@ export function ActiveTimersIndicator({ userId }: ActiveTimersIndicatorProps) {
 
   const totalActive = timers.length;
 
-  if (totalActive === 0) return null;
+  if (!isLoaded || totalActive === 0) return null;
 
   return (
     <div className="fixed bottom-4 right-4 z-40">
