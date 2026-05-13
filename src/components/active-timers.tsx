@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { Play, Pause, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,30 +20,29 @@ export function ActiveTimersIndicator({ userId }: ActiveTimersIndicatorProps) {
     if (typeof window === "undefined") return [];
     return getActiveTimers();
   });
-  const [isLoaded, setIsLoaded] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const loadTimers = useCallback(() => {
-    setTimers(getActiveTimers());
-  }, []);
-
   useEffect(() => {
-    loadTimers();
-    setIsLoaded(true);
+    const timeout = setTimeout(() => {
+      setTimers(getActiveTimers());
+    });
 
     const handleStorage = (e: StorageEvent) => {
       if (e.key === "active-timers") {
-        loadTimers();
+        setTimers(getActiveTimers());
       }
     };
 
     window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, [loadTimers]);
+    return () => {
+      clearTimeout(timeout);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, []);
 
   const totalActive = timers.length;
 
-  if (!isLoaded || totalActive === 0) return null;
+  if (totalActive === 0) return null;
 
   return (
     <div className="fixed bottom-4 right-4 z-40">
