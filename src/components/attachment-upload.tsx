@@ -120,6 +120,14 @@ function AttachmentUploadComponent({
     <div className="space-y-4">
       <div
         {...{ onDragOver: handleDragOver, onDragLeave: handleDragLeave, onDrop: handleDrop }}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            inputRef.current?.click();
+          }
+        }}
         className={cn(
           "cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors",
           isDragOver
