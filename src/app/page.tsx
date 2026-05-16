@@ -182,8 +182,7 @@ function HomeContent() {
     setIsTaskFormOpen(true);
   }, []);
 
-  // Get page title
-  const getPageTitle = () => {
+  const pageTitle = useMemo(() => {
     if (currentList) {
       return `${currentList.emoji || ""} ${currentList.name}`.trim();
     }
@@ -197,7 +196,7 @@ function HomeContent() {
       default:
         return "All Tasks";
     }
-  };
+  }, [currentList, currentView]);
 
   if (isLoading) {
     return (
@@ -223,7 +222,7 @@ function HomeContent() {
           <div className="flex flex-col gap-4 mb-8">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold">{getPageTitle()}</h1>
+                <h1 className="text-2xl font-bold">{pageTitle}</h1>
                 {currentView !== "all" && (
                   <p className="text-sm text-muted-foreground">
                     {format(new Date(), "EEEE, MMMM d, yyyy")}
