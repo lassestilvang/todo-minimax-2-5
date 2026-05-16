@@ -18,6 +18,10 @@ export function SearchBar({ tasks, onSelectTask }: SearchBarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
 
+  const resultsRef = useRef<Fuse.FuseResult<Task>[]>([]);
+  const selectedIndexRef = useRef(-1);
+  const isOpenRef = useRef(false);
+
   const debouncedQuery = useDebounce(query, 150);
 
   const fuse = useMemo(
@@ -35,32 +39,39 @@ export function SearchBar({ tasks, onSelectTask }: SearchBarProps) {
     return fuse.search(debouncedQuery).slice(0, 5);
   }, [debouncedQuery, fuse]);
 
+  useEffect(() => {
+    resultsRef.current = results;
+    selectedIndexRef.current = selectedIndex;
+    isOpenRef.current = isOpen;
+  }, [results, selectedIndex, isOpen]);
+
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === "Escape" && isOpen) {
+    if (e.key === "Escape" && isOpenRef.current) {
       setIsOpen(false);
       setQuery("");
       setSelectedIndex(-1);
+      return;
     }
 
-    if (!isOpen || results.length === 0) return;
+    if (!isOpenRef.current || resultsRef.current.length === 0) return;
 
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setSelectedIndex((prev) => (prev < results.length - 1 ? prev + 1 : 0));
+      setSelectedIndex((prev) => (prev < resultsRef.current.length - 1 ? prev + 1 : 0));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : results.length - 1));
-    } else if (e.key === "Enter" && selectedIndex >= 0) {
+      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : resultsRef.current.length - 1));
+    } else if (e.key === "Enter" && selectedIndexRef.current >= 0) {
       e.preventDefault();
-      const task = results[selectedIndex].item;
+      const task = resultsRef.current[selectedIndexRef.current].item;
       onSelectTask(task);
       setQuery("");
       setIsOpen(false);
       setSelectedIndex(-1);
     }
-  }, [isOpen, results, selectedIndex, onSelectTask]);
+  }, [onSelectTask]);
 
   useEffect(() => {
     document.addEventListener("keydown", handleKeyDown);
