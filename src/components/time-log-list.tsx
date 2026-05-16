@@ -6,24 +6,26 @@ import { Clock, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { TimeLog } from "@/types";
 
+function formatDuration(minutes: number | null): string {
+  if (!minutes) return "0m";
+  const hrs = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (hrs > 0) {
+    return `${hrs}h ${mins}m`;
+  }
+  return `${mins}m`;
+}
+
+function formatDateTime(date: Date) {
+  return format(new Date(date), "MMM d, yyyy HH:mm");
+}
+
 interface TimeLogListProps {
   timeLogs: TimeLog[];
   onDelete?: (id: string) => void;
 }
 
 function TimeLogListComponent({ timeLogs, onDelete }: TimeLogListProps) {
-  const formatDuration = (minutes: number | null): string => {
-    if (!minutes) return "0m";
-    const hrs = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    if (hrs > 0) {
-      return `${hrs}h ${mins}m`;
-    }
-    return `${mins}m`;
-  };
-
-  const formatDateTime = (date: Date) => format(new Date(date), "MMM d, yyyy HH:mm");
-
   return (
     <div className="space-y-2">
       <h4 className="text-sm font-medium flex items-center gap-2">
