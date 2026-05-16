@@ -22,6 +22,15 @@ import { PRIORITY_COLORS } from "@/types";
 import type { Task } from "@/types";
 import { TimeTrackingDialog } from "@/components/time-tracking-dialog";
 
+function formatDueDate(date: Date) {
+  if (isToday(date)) return "Today";
+  if (isTomorrow(date)) return "Tomorrow";
+  const days = differenceInDays(date, new Date());
+  if (days < 0) return `${Math.abs(days)} days overdue`;
+  if (days <= 7) return `In ${days} days`;
+  return format(date, "MMM d");
+}
+
 interface TaskCardProps {
   task: Task;
   onToggleComplete: (id: string) => void;
@@ -40,15 +49,6 @@ function TaskCardComponent({ task, onToggleComplete, onDelete, onEdit, onToggleS
     () => task.dueDate && !task.completed && isPast(new Date(task.dueDate)) && !isToday(new Date(task.dueDate)),
     [task.dueDate, task.completed]
   );
-
-  const formatDueDate = (date: Date) => {
-    if (isToday(date)) return "Today";
-    if (isTomorrow(date)) return "Tomorrow";
-    const days = differenceInDays(date, new Date());
-    if (days < 0) return `${Math.abs(days)} days overdue`;
-    if (days <= 7) return `In ${days} days`;
-    return format(date, "MMM d");
-  };
 
   const completedSubtasks = useMemo(
     () => task.subtasks?.filter((s) => s.completed).length || 0,
