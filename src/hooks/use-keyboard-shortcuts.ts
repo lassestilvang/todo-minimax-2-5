@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useRef } from "react";
 
 interface KeyboardShortcut {
   key: string;
@@ -11,9 +11,15 @@ interface KeyboardShortcut {
 }
 
 export function useKeyboardShortcuts(shortcuts: KeyboardShortcut[]) {
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent) => {
-      for (const shortcut of shortcuts) {
+  const shortcutsRef = useRef(shortcuts);
+
+  useEffect(() => {
+    shortcutsRef.current = shortcuts;
+  }, [shortcuts]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      for (const shortcut of shortcutsRef.current) {
         const ctrlMatch = shortcut.ctrl ? event.ctrlKey || event.metaKey : !event.ctrlKey && !event.metaKey;
         const shiftMatch = shortcut.shift ? event.shiftKey : !event.shiftKey;
         const altMatch = shortcut.alt ? event.altKey : !event.altKey;
@@ -25,12 +31,9 @@ export function useKeyboardShortcuts(shortcuts: KeyboardShortcut[]) {
           break;
         }
       }
-    },
-    [shortcuts]
-  );
+    };
 
-  useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleKeyDown]);
+  }, []);
 }
