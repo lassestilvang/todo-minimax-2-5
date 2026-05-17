@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback, useState, useSyncExternalStore } from "react";
 import {
   getActiveTimers,
   addActiveTimer,
@@ -12,26 +12,34 @@ import {
   type TimerData,
 } from "@/lib/timer-store";
 
+const TIMER_EVENT_NAME = "timer-store-update";
+
+function subscribe(callback: () => void) {
+  window.addEventListener(TIMER_EVENT_NAME, callback);
+  return () => window.removeEventListener(TIMER_EVENT_NAME, callback);
+}
+
+function getServerSnapshot() {
+  return [];
+}
+
+function useActiveTimersStore() {
+  return useSyncExternalStore(subscribe, getActiveTimers, getServerSnapshot);
+}
+
 export function useTimer(taskId: string, userId: string) {
-  const [isRunning, setIsRunning] = useState(() => {
-    if (typeof window === "undefined") return false;
-    const timers = getActiveTimers();
-    return timers.some((t) => t.taskId === taskId);
-  });
-  const [elapsed, setElapsed] = useState(() => {
-    if (typeof window === "undefined") return 0;
-    const timers = getActiveTimers();
-    const existingTimer = timers.find((t) => t.taskId === taskId);
-    return existingTimer ? getElapsedSeconds(existingTimer) : 0;
-  });
+  const timers = useActiveTimersStore();
+  const [, setTick] = useState(0);
 
   useEffect(() => {
-    if (!isRunning) return;
-    const interval = setInterval(() => {
-      setElapsed((prev) => prev + 1);
-    }, 1000);
+    if (!timers.some((t) => t.taskId === taskId)) return;
+    const interval = setInterval(() => setTick((t) => t + 1), 1000);
     return () => clearInterval(interval);
-  }, [isRunning]);
+  }, [taskId, timers]);
+
+  const isRunning = timers.some((t) => t.taskId === taskId);
+  const existingTimer = timers.find((t) => t.taskId === taskId);
+  const elapsed = existingTimer ? getElapsedSeconds(existingTimer) : 0;
 
   const start = useCallback(() => {
     const timers = getActiveTimers();
@@ -47,8 +55,6 @@ export function useTimer(taskId: string, userId: string) {
       };
       addActiveTimer(newTimer);
     }
-    setIsRunning(true);
-    setElapsed(0);
   }, [taskId, userId]);
 
   const stop = useCallback((): number => {
@@ -58,8 +64,6 @@ export function useTimer(taskId: string, userId: string) {
 
     const finalElapsed = getElapsedSeconds(timer);
     removeActiveTimer(taskId);
-    setIsRunning(false);
-    setElapsed(0);
     return finalElapsed;
   }, [taskId, elapsed]);
 
@@ -73,7 +77,6 @@ export function useTimer(taskId: string, userId: string) {
       startTime: Date.now(),
       elapsed: timer.elapsed + elapsedSeconds,
     });
-    setIsRunning(false);
   }, [taskId]);
 
   const resume = useCallback(() => {
@@ -82,13 +85,10 @@ export function useTimer(taskId: string, userId: string) {
     if (!timer) return;
 
     updateActiveTimer(taskId, { startTime: Date.now() });
-    setIsRunning(true);
   }, [taskId]);
 
   const reset = useCallback(() => {
     removeActiveTimer(taskId);
-    setIsRunning(false);
-    setElapsed(0);
   }, [taskId]);
 
   return {

@@ -1,4 +1,5 @@
 const TIMER_STORAGE_KEY = "active-timers";
+const TIMER_EVENT_NAME = "timer-store-update";
 
 export interface TimerData {
   taskId: string;
@@ -50,11 +51,7 @@ export function clearAllTimers(): void {
 
 export function broadcastTimersChange(): void {
   if (typeof window === "undefined") return;
-  const event = new StorageEvent("storage", {
-    key: TIMER_STORAGE_KEY,
-    newValue: localStorage.getItem(TIMER_STORAGE_KEY),
-  });
-  window.dispatchEvent(event);
+  window.dispatchEvent(new CustomEvent(TIMER_EVENT_NAME));
 }
 
 export function getElapsedSeconds(timer: TimerData): number {
