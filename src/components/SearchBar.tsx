@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
-import Fuse from "fuse.js";
+import Fuse, { type FuseResult } from "fuse.js";
 import { Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -18,7 +18,7 @@ export function SearchBar({ tasks, onSelectTask }: SearchBarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
 
-  const resultsRef = useRef<Fuse.FuseResult<Task>[]>([]);
+  const resultsRef = useRef<FuseResult<Task>[]>([]);
   const selectedIndexRef = useRef(-1);
   const isOpenRef = useRef(false);
 
