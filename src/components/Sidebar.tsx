@@ -5,6 +5,8 @@ import Link from "next/link";
 import {
   Inbox,
   Calendar,
+  CalendarDays,
+  ListTodo,
   ChevronRight,
   ChevronDown,
   Plus,
@@ -19,10 +21,10 @@ import { Button } from "@/components/ui/button";
 import type { List, Label } from "@/types";
 
 const VIEWS = [
-  { id: "today", label: "Today", icon: Calendar, href: "/?view=today" },
+  { id: "today", label: "Today", icon: CalendarDays, href: "/?view=today" },
   { id: "week", label: "Next 7 Days", icon: Calendar, href: "/?view=week" },
   { id: "upcoming", label: "Upcoming", icon: Calendar, href: "/?view=upcoming" },
-  { id: "all", label: "All Tasks", icon: Inbox, href: "/?view=all" },
+  { id: "all", label: "All Tasks", icon: ListTodo, href: "/?view=all" },
 ];
 
 interface SidebarProps {
