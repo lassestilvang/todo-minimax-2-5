@@ -45,10 +45,11 @@ function TaskCardComponent({ task, onToggleComplete, onDelete, onEdit, onToggleS
   const [isExpanded, setIsExpanded] = useState(false);
   const [showTimeDialog, setShowTimeDialog] = useState(false);
 
-  const isOverdue = useMemo(
-    () => task.dueDate && !task.completed && isPast(new Date(task.dueDate)) && !isToday(new Date(task.dueDate)),
-    [task.dueDate, task.completed]
-  );
+  const isOverdue = useMemo(() => {
+    if (!task.dueDate || task.completed) return false;
+    const dueDate = new Date(task.dueDate);
+    return isPast(dueDate) && !isToday(dueDate);
+  }, [task.dueDate, task.completed]);
 
   const completedSubtasks = useMemo(
     () => task.subtasks?.filter((s) => s.completed).length || 0,
