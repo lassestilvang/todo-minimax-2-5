@@ -17,7 +17,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
 import type { Task, List, Label, TaskFormData, ViewType } from "@/types";
-import * as actions from "./actions";
+import {
+  getLists,
+  getLabels,
+  getTasks,
+  getOrCreateInbox,
+  createTask,
+  updateTask,
+  deleteTask,
+  toggleTaskComplete,
+  toggleSubtaskComplete,
+} from "./actions";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 
 export default function Home() {
@@ -55,13 +65,13 @@ function HomeContent() {
     async function loadData() {
       try {
         const [listsData, labelsData, tasksResult] = await Promise.all([
-          actions.getLists(),
-          actions.getLabels(),
-          actions.getTasks(currentView, currentListId),
+          getLists(),
+          getLabels(),
+          getTasks(currentView, currentListId),
         ]);
         
         // Ensure inbox exists
-        const inbox = await actions.getOrCreateInbox();
+        const inbox = await getOrCreateInbox();
         if (!listsData.find((l) => l.id === inbox.id)) {
           listsData.unshift(inbox);
         }
@@ -109,7 +119,7 @@ function HomeContent() {
   const handleCreateTask = useCallback((data: TaskFormData) => {
     startTransition(async () => {
       try {
-        const newTask = await actions.createTask(data);
+        const newTask = await createTask(data);
         setTasks((prev) => [newTask, ...prev]);
       } catch {
         showToast("Failed to create task");
@@ -121,7 +131,7 @@ function HomeContent() {
     if (!editingTask) return;
     startTransition(async () => {
       try {
-        const updated = await actions.updateTask(editingTask.id, data);
+        const updated = await updateTask(editingTask.id, data);
         setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
         setEditingTask(null);
       } catch {
@@ -134,7 +144,7 @@ function HomeContent() {
     setPendingAction(id);
     startTransition(async () => {
       try {
-        const updated = await actions.toggleTaskComplete(id);
+        const updated = await toggleTaskComplete(id);
         if (updated) {
           setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
         }
@@ -150,7 +160,7 @@ function HomeContent() {
     setPendingAction(id);
     startTransition(async () => {
       try {
-        await actions.deleteTask(id);
+        await deleteTask(id);
         setTasks((prev) => prev.filter((t) => t.id !== id));
       } catch {
         showToast("Failed to delete task");
@@ -168,8 +178,8 @@ function HomeContent() {
   const handleToggleSubtask = useCallback((subtaskId: string) => {
     startTransition(async () => {
       try {
-        await actions.toggleSubtaskComplete(subtaskId);
-        const result = await actions.getTasks(currentView, currentListId);
+        await toggleSubtaskComplete(subtaskId);
+        const result = await getTasks(currentView, currentListId);
         setTasks(Array.isArray(result) ? result : result.tasks);
       } catch {
         showToast("Failed to toggle subtask");
