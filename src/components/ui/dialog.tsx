@@ -111,15 +111,19 @@ const DialogContent = React.forwardRef<
 >(({ className, children, onClose, ...props }, ref) => {
   const [mounted, setMounted] = React.useState(false);
   const focusTrapRef = useFocusTrap(mounted);
+  const containerRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     setMounted(true);
-    const firstInput = document.querySelector<HTMLInputElement>("#task-title-input");
-    firstInput?.focus();
+    const firstFocusable = containerRef.current?.querySelector<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    firstFocusable?.focus();
   }, []);
 
   const combinedRef = React.useCallback((el: HTMLDivElement | null) => {
     focusTrapRef.current = el;
+    containerRef.current = el;
     if (typeof ref === "function") ref(el);
     else if (ref) ref.current = el;
   }, [ref, focusTrapRef]);
