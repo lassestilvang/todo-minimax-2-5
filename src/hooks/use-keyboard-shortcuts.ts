@@ -1,13 +1,25 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
+
+type ModifierKey = "ctrl" | "shift" | "alt" | "meta";
 
 interface KeyboardShortcut {
   key: string;
   ctrl?: boolean;
   shift?: boolean;
   alt?: boolean;
+  meta?: boolean;
   action: () => void;
+}
+
+function getModifierState(event: KeyboardEvent): Record<ModifierKey, boolean> {
+  return {
+    ctrl: event.ctrlKey,
+    shift: event.shiftKey,
+    alt: event.altKey,
+    meta: event.metaKey,
+  };
 }
 
 export function useKeyboardShortcuts(shortcuts: KeyboardShortcut[]) {
@@ -17,23 +29,32 @@ export function useKeyboardShortcuts(shortcuts: KeyboardShortcut[]) {
     shortcutsRef.current = shortcuts;
   }, [shortcuts]);
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      for (const shortcut of shortcutsRef.current) {
-        const ctrlMatch = shortcut.ctrl ? event.ctrlKey || event.metaKey : !event.ctrlKey && !event.metaKey;
-        const shiftMatch = shortcut.shift ? event.shiftKey : !event.shiftKey;
-        const altMatch = shortcut.alt ? event.altKey : !event.altKey;
-        const keyMatch = event.key.toLowerCase() === shortcut.key.toLowerCase();
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+      return;
+    }
 
-        if (keyMatch && ctrlMatch && shiftMatch && altMatch) {
-          event.preventDefault();
-          shortcut.action();
-          break;
-        }
+    const modifiers = getModifierState(event);
+
+    for (const shortcut of shortcutsRef.current) {
+      const ctrlMatch = shortcut.ctrl ? modifiers.ctrl : !modifiers.ctrl;
+      const shiftMatch = shortcut.shift ? modifiers.shift : !modifiers.shift;
+      const altMatch = shortcut.alt ? modifiers.alt : !modifiers.alt;
+      const metaMatch = shortcut.meta !== undefined
+        ? (shortcut.meta ? modifiers.meta : !modifiers.meta)
+        : true;
+      const keyMatch = event.key.toLowerCase() === shortcut.key.toLowerCase();
+
+      if (keyMatch && ctrlMatch && shiftMatch && altMatch && metaMatch) {
+        event.preventDefault();
+        shortcut.action();
+        break;
       }
-    };
+    }
+  }, []);
 
+  useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [handleKeyDown]);
 }
