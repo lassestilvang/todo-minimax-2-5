@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useSyncExternalStore } from "react";
+import React, { useState, useSyncExternalStore } from "react";
 import { Play, Pause, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   getActiveTimers,
-  getElapsedSeconds,
   formatDurationShort,
   type TimerData,
 } from "@/lib/timer-store";
@@ -81,21 +80,10 @@ interface TimerControlProps {
 }
 
 function TimerControl({ timer, userId }: TimerControlProps) {
-  const [elapsed, setElapsed] = useState(0);
-  const { isRunning, start: startTimer, stop: stopTimer } = useTimer(
+  const { isRunning, elapsed, start: startTimer, stop: stopTimer } = useTimer(
     timer.taskId,
     userId
   );
-
-  useEffect(() => {
-    const updateElapsed = () => {
-      setElapsed(getElapsedSeconds(timer));
-    };
-
-    updateElapsed();
-    const interval = setInterval(updateElapsed, 1000);
-    return () => clearInterval(interval);
-  }, [timer]);
 
   return (
     <div className="flex items-center justify-between rounded-lg border p-3">
