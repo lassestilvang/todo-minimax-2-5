@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useSyncExternalStore } from "react";
 import { Play, Pause, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,34 +11,28 @@ import {
 } from "@/lib/timer-store";
 import { useTimer } from "@/hooks/use-timer";
 
+const TIMER_EVENT_NAME = "timer-store-update";
+
+function subscribe(callback: () => void) {
+  window.addEventListener(TIMER_EVENT_NAME, callback);
+  return () => window.removeEventListener(TIMER_EVENT_NAME, callback);
+}
+
+function getServerSnapshot() {
+  return [];
+}
+
+function useActiveTimersStore() {
+  return useSyncExternalStore(subscribe, getActiveTimers, getServerSnapshot);
+}
+
 interface ActiveTimersIndicatorProps {
   userId: string;
 }
 
 export function ActiveTimersIndicator({ userId }: ActiveTimersIndicatorProps) {
-  const [timers, setTimers] = useState<TimerData[]>(() => {
-    if (typeof window === "undefined") return [];
-    return getActiveTimers();
-  });
+  const timers = useActiveTimersStore();
   const [isExpanded, setIsExpanded] = useState(false);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setTimers(getActiveTimers());
-    });
-
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === "active-timers") {
-        setTimers(getActiveTimers());
-      }
-    };
-
-    window.addEventListener("storage", handleStorage);
-    return () => {
-      clearTimeout(timeout);
-      window.removeEventListener("storage", handleStorage);
-    };
-  }, []);
 
   const totalActive = timers.length;
 
@@ -139,10 +133,7 @@ function TimerControl({ timer, userId }: TimerControlProps) {
           variant="destructive"
           size="icon"
           className="h-8 w-8"
-          onClick={() => {
-            stopTimer();
-            window.dispatchEvent(new Event("timers-change"));
-          }}
+          onClick={() => stopTimer()}
           title="Stop and save"
         >
           <Square className="h-4 w-4" />
