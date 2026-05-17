@@ -4,6 +4,11 @@ import React, { createContext, useContext, useState, useCallback } from "react";
 import { X, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+let toastId = 0;
+function generateToastId() {
+  return `toast-${++toastId}-${Date.now()}`;
+}
+
 interface Toast {
   id: string;
   message: string;
@@ -28,7 +33,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const showToast = useCallback((message: string, type: Toast["type"] = "error") => {
-    const id = Math.random().toString(36).slice(2);
+    const id = generateToastId();
     setToasts((prev) => [...prev, { id, message, type }]);
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
