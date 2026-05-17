@@ -58,10 +58,15 @@ export async function deleteList(id: string) {
 }
 
 export async function getLists() {
-  const lists = await prisma.list.findMany({
-    orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
-  });
-  return lists;
+  try {
+    const lists = await prisma.list.findMany({
+      orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
+    });
+    return lists;
+  } catch (error) {
+    console.error("Failed to get lists:", error);
+    return [];
+  }
 }
 
 export async function getOrCreateInbox() {
@@ -119,10 +124,15 @@ export async function deleteLabel(id: string) {
 }
 
 export async function getLabels() {
-  const labels = await prisma.label.findMany({
-    orderBy: { createdAt: "asc" },
-  });
-  return labels;
+  try {
+    const labels = await prisma.label.findMany({
+      orderBy: { createdAt: "asc" },
+    });
+    return labels;
+  } catch (error) {
+    console.error("Failed to get labels:", error);
+    return [];
+  }
 }
 
 // Task Actions
@@ -234,80 +244,90 @@ export async function deleteTask(id: string) {
 }
 
 export async function getTasks(view?: string, listId?: string, cursor?: string, limit = 50) {
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+  try {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-  const where: Record<string, unknown> = {};
+    const where: Record<string, unknown> = {};
 
-  if (listId) {
-    where.listId = listId;
+    if (listId) {
+      where.listId = listId;
+    }
+
+    switch (view) {
+      case "today":
+        where.dueDate = {
+          gte: today,
+          lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
+        };
+        break;
+      case "week":
+        where.dueDate = {
+          gte: today,
+          lt: nextWeek,
+        };
+        break;
+      case "upcoming":
+        where.dueDate = {
+          gte: nextWeek,
+        };
+        break;
+      case "all":
+      default:
+        break;
+    }
+
+    const tasks = await prisma.task.findMany({
+      where,
+      orderBy: [
+        { completed: "asc" },
+        { dueDate: "asc" },
+        { priority: "desc" },
+        { createdAt: "desc" },
+      ],
+      take: limit + 1,
+      cursor: cursor ? { id: cursor } : undefined,
+      skip: cursor ? 1 : 0,
+      include: {
+        labels: true,
+        subtasks: { orderBy: { createdAt: "asc" } },
+        taskLogs: { orderBy: { createdAt: "desc" }, take: 10 },
+        timeLogs: { orderBy: { startTime: "desc" } },
+        attachments: true,
+      },
+    });
+
+    let nextCursor: string | undefined;
+    if (tasks.length > limit) {
+      const nextItem = tasks.pop();
+      nextCursor = nextItem?.id;
+    }
+
+    return { tasks, nextCursor };
+  } catch (error) {
+    console.error("Failed to get tasks:", error);
+    return { tasks: [], nextCursor: undefined };
   }
-
-  switch (view) {
-    case "today":
-      where.dueDate = {
-        gte: today,
-        lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
-      };
-      break;
-    case "week":
-      where.dueDate = {
-        gte: today,
-        lt: nextWeek,
-      };
-      break;
-    case "upcoming":
-      where.dueDate = {
-        gte: nextWeek,
-      };
-      break;
-    case "all":
-    default:
-      break;
-  }
-
-  const tasks = await prisma.task.findMany({
-    where,
-    orderBy: [
-      { completed: "asc" },
-      { dueDate: "asc" },
-      { priority: "desc" },
-      { createdAt: "desc" },
-    ],
-    take: limit + 1,
-    cursor: cursor ? { id: cursor } : undefined,
-    skip: cursor ? 1 : 0,
-    include: {
-      labels: true,
-      subtasks: { orderBy: { createdAt: "asc" } },
-      taskLogs: { orderBy: { createdAt: "desc" }, take: 10 },
-      timeLogs: { orderBy: { startTime: "desc" } },
-      attachments: true,
-    },
-  });
-
-  let nextCursor: string | undefined;
-  if (tasks.length > limit) {
-    const nextItem = tasks.pop();
-    nextCursor = nextItem?.id;
-  }
-
-  return { tasks, nextCursor };
 }
 
 export async function getTaskById(id: string) {
-  const task = await prisma.task.findUnique({
-    where: { id },
-    include: {
-      labels: true,
-      subtasks: { orderBy: { createdAt: "asc" } },
-      taskLogs: { orderBy: { createdAt: "desc" } },
-      timeLogs: { orderBy: { startTime: "desc" } },
-      attachments: { orderBy: { createdAt: "desc" } },
-    },
-  });
-  return task;
+  try {
+    const task = await prisma.task.findUnique({
+      where: { id },
+      include: {
+        labels: true,
+        subtasks: { orderBy: { createdAt: "asc" } },
+        taskLogs: { orderBy: { createdAt: "desc" } },
+        timeLogs: { orderBy: { startTime: "desc" } },
+        attachments: { orderBy: { createdAt: "desc" } },
+      },
+    });
+    return task;
+  } catch (error) {
+    console.error("Failed to get task:", error);
+    return null;
+  }
 }
 
 // Subtask Actions
