@@ -68,7 +68,6 @@ export function TimeTrackingDialog({
   };
 
   const handleDeleteLog = async (id: string) => {
-    if (!confirm("Delete this time log?")) return;
     try {
       await deleteTimeLog(id);
       fetchTimeLogs();
