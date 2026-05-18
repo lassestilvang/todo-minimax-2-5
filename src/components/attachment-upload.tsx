@@ -10,6 +10,12 @@ import { uploadAttachments } from "@/app/actions";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
+interface AttachmentInfo {
+  id: string;
+  file: File;
+  preview?: string;
+}
+
 interface AttachmentUploadProps {
   taskId: string;
   onUploadComplete?: () => void;
