@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo } from "react";
 import Link from "next/link";
 import {
   Calendar,
@@ -34,7 +34,7 @@ interface SidebarProps {
   currentView?: string;
 }
 
-export function Sidebar({
+function SidebarComponent({
   lists,
   labels,
   overdueCount,
@@ -270,3 +270,5 @@ export function Sidebar({
     </>
   );
 }
+
+export const Sidebar = memo(SidebarComponent);
