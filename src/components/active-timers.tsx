@@ -1,21 +1,13 @@
 "use client";
 
-import React, { useState, useSyncExternalStore } from "react";
+import React, { useState } from "react";
 import { Play, Pause, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  getActiveTimers,
   formatDurationShort,
   type TimerData,
 } from "@/lib/timer-store";
-import { useTimer } from "@/hooks/use-timer";
-
-const TIMER_EVENT_NAME = "timer-store-update";
-
-function subscribe(callback: () => void) {
-  window.addEventListener(TIMER_EVENT_NAME, callback);
-  return () => window.removeEventListener(TIMER_EVENT_NAME, callback);
-}
+import { useTimer, useActiveTimersStore } from "@/hooks/use-timer";
 
 function getServerSnapshot() {
   return [];
