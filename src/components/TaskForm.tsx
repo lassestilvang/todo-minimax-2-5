@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { AttachmentUpload } from "@/components/attachment-upload";
 import { AttachmentList } from "@/components/attachment-list";
+import { useToast } from "@/components/ui/toast";
 import {
   deleteAttachment,
   getTaskById,
@@ -50,6 +51,7 @@ interface TaskFormProps {
 }
 
 export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTaskChange }: TaskFormProps) {
+  const { showToast } = useToast();
   const {
     register,
     handleSubmit,
