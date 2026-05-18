@@ -438,7 +438,8 @@ export async function addManualTimeEntry(
   taskId: string,
   date: string,
   durationMinutes: number,
-  notes?: string
+  notes?: string,
+  userId = "default"
 ) {
   const startTime = new Date(date);
   const endTime = new Date(startTime.getTime() + durationMinutes * 60 * 1000);
@@ -446,7 +447,7 @@ export async function addManualTimeEntry(
   const timeLog = await prisma.timeLog.create({
     data: {
       taskId,
-      userId: "system", // Or current user ID
+      userId,
       startTime,
       endTime,
       duration: durationMinutes,
