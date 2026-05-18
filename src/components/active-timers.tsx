@@ -9,14 +9,6 @@ import {
 } from "@/lib/timer-store";
 import { useTimer, useActiveTimersStore } from "@/hooks/use-timer";
 
-function getServerSnapshot() {
-  return [];
-}
-
-function useActiveTimersStore() {
-  return useSyncExternalStore(subscribe, getActiveTimers, getServerSnapshot);
-}
-
 interface ActiveTimersIndicatorProps {
   userId: string;
 }

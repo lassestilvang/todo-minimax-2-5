@@ -23,7 +23,7 @@ function getServerSnapshot() {
   return [];
 }
 
-function useActiveTimersStore() {
+export function useActiveTimersStore() {
   return useSyncExternalStore(subscribe, getActiveTimers, getServerSnapshot);
 }
 
