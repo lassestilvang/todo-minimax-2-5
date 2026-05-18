@@ -148,6 +148,15 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
     }
   };
 
+  const handleUploadComplete = async () => {
+    if (task && onTaskChange) {
+      const updated = await getTaskById(task.id);
+      if (updated) {
+        onTaskChange(updated);
+      }
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
@@ -340,8 +349,9 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
             <div>
               <label className="text-sm font-medium">Attachments</label>
               <AttachmentUpload
-                onUploadComplete={() => {}}
-                onError={() => {}}
+                taskId={task.id}
+                onUploadComplete={handleUploadComplete}
+                onError={(error) => console.error(error)}
               />
               {/* Display existing attachments */}
               {task.attachments && task.attachments.length > 0 && (

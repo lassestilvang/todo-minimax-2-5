@@ -6,21 +6,18 @@ import { Upload, X, File } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { uploadAttachments } from "@/app/actions";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
-interface AttachmentInfo {
-  file: File;
-  preview?: string;
-  id: string;
-}
-
 interface AttachmentUploadProps {
-  onUploadComplete?: (attachments: AttachmentInfo[]) => void;
+  taskId: string;
+  onUploadComplete?: () => void;
   onError?: (error: string) => void;
 }
 
 function AttachmentUploadComponent({
+  taskId,
   onUploadComplete,
   onError,
 }: AttachmentUploadProps) {
@@ -96,17 +93,15 @@ function AttachmentUploadComponent({
     setProgress(0);
 
     try {
-      const totalSteps = attachments.length;
-      let completed = 0;
+      const formData = new FormData();
+      attachments.forEach((att) => {
+        formData.append("files", att.file);
+      });
 
-      for (let i = 0; i < attachments.length; i++) {
-        // Simulate upload - in real implementation, you'd upload each file
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        completed++;
-        setProgress(Math.round((completed / totalSteps) * 100));
-      }
+      await uploadAttachments(taskId, formData);
 
-      onUploadComplete?.(attachments);
+      setProgress(100);
+      onUploadComplete?.();
       setAttachments([]);
       setProgress(0);
     } catch (error) {
