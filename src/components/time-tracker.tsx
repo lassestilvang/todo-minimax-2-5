@@ -73,10 +73,10 @@ export function TimeTracker({
               size="sm"
               onClick={stop}
               className="gap-1.5"
-              aria-label="Stop timer"
+              aria-label="Pause timer"
             >
               <Pause className="h-4 w-4" />
-              Stop
+              Pause
             </Button>
             <Button
               type="button"
@@ -84,7 +84,7 @@ export function TimeTracker({
               size="sm"
               onClick={handleStop}
               className="gap-1.5"
-              aria-label="Stop timer"
+              aria-label="Stop and save time"
             >
               <Square className="h-4 w-4" />
               Stop
