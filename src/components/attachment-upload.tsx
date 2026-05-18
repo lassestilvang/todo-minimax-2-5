@@ -25,10 +25,13 @@ function AttachmentUploadComponent({
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFiles = useCallback((files: FileList | null) => {
     if (!files) return;
+
+    setError(null);
 
     const newAttachments: AttachmentInfo[] = [];
 
@@ -104,8 +107,10 @@ function AttachmentUploadComponent({
       onUploadComplete?.();
       setAttachments([]);
       setProgress(0);
-    } catch (error) {
-      onError?.(error instanceof Error ? error.message : "Upload failed");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Upload failed";
+      setError(message);
+      onError?.(message);
     } finally {
       setUploading(false);
     }
@@ -209,6 +214,12 @@ function AttachmentUploadComponent({
             <span>{progress}%</span>
           </div>
           <Progress value={progress} />
+        </div>
+      )}
+
+      {error && (
+        <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+          {error}
         </div>
       )}
 
