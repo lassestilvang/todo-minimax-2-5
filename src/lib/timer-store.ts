@@ -1,11 +1,46 @@
 const TIMER_STORAGE_KEY = "active-timers";
 const TIMER_EVENT_NAME = "timer-store-update";
+const TIMER_TICK_EVENT = "timer-tick";
+
+let globalIntervalId: ReturnType<typeof setInterval> | null = null;
+let tickListenerCount = 0;
 
 export interface TimerData {
   taskId: string;
   userId: string;
-  startTime: number; // timestamp
-  elapsed: number; // seconds already accumulated (for pause/resume)
+  startTime: number;
+  elapsed: number;
+}
+
+function createTickEvent() {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(TIMER_TICK_EVENT));
+}
+
+function startGlobalTicker() {
+  if (globalIntervalId !== null) return;
+  globalIntervalId = setInterval(createTickEvent, 1000);
+}
+
+function stopGlobalTicker() {
+  if (globalIntervalId === null) return;
+  clearInterval(globalIntervalId);
+  globalIntervalId = null;
+}
+
+export function subscribeToTimers(callback: () => void): () => void {
+  if (typeof window === "undefined") return () => {};
+  tickListenerCount++;
+  startGlobalTicker();
+  window.addEventListener(TIMER_TICK_EVENT, callback);
+  return () => {
+    window.removeEventListener(TIMER_TICK_EVENT, callback);
+    tickListenerCount--;
+    if (tickListenerCount <= 0) {
+      tickListenerCount = 0;
+      stopGlobalTicker();
+    }
+  };
 }
 
 export function getActiveTimers(): TimerData[] {
@@ -52,11 +87,12 @@ export function clearAllTimers(): void {
 export function broadcastTimersChange(): void {
   if (typeof window === "undefined") return;
   window.dispatchEvent(new CustomEvent(TIMER_EVENT_NAME));
+  createTickEvent();
 }
 
 export function getElapsedSeconds(timer: TimerData): number {
   if (!timer || typeof timer.startTime !== "number") return 0;
-  return (timer.elapsed || 0) + (Date.now() - timer.startTime);
+  return (timer.elapsed || 0) + Math.floor((Date.now() - timer.startTime) / 1000);
 }
 
 export function formatDuration(seconds: number): string {
