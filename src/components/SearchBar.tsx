@@ -2,7 +2,8 @@
 
 import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import Fuse, { type FuseResult } from "fuse.js";
-import { Search, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, X, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -17,6 +18,7 @@ export function SearchBar({ tasks, onSelectTask }: SearchBarProps) {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [isFocused, setIsFocused] = useState(false);
 
   const resultsRef = useRef<FuseResult<Task>[]>([]);
   const selectedIndexRef = useRef(-1);
@@ -91,8 +93,14 @@ export function SearchBar({ tasks, onSelectTask }: SearchBarProps) {
 
   return (
     <div className="relative" ref={containerRef}>
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <motion.div
+        animate={{
+          scale: isFocused ? 1.01 : 1,
+        }}
+        transition={{ duration: 0.15 }}
+        className="relative"
+      >
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors duration-150" />
         <Input
           type="text"
           placeholder="Search tasks..."
@@ -102,66 +110,112 @@ export function SearchBar({ tasks, onSelectTask }: SearchBarProps) {
             setIsOpen(true);
             setSelectedIndex(-1);
           }}
-          onFocus={() => setIsOpen(true)}
-          className="pl-9 pr-10"
+          onFocus={() => {
+            setIsOpen(true);
+            setIsFocused(true);
+          }}
+          onBlur={() => setIsFocused(false)}
+          className={cn(
+            "pl-11 pr-20 h-11 bg-muted/50 dark:bg-muted/30 border-transparent transition-all duration-200",
+            isFocused && "bg-background dark:bg-background border-primary/30 shadow-sm"
+          )}
         />
-        {query && (
-          <button
-            onClick={() => {
-              setQuery("");
-              setIsOpen(false);
-            }}
-            className="absolute right-3 top-1/2 -translate-y-1/2"
-          >
-            <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-          </button>
-        )}
-      </div>
-
-      {/* Search Results */}
-      {isOpen && results.length > 0 && (
-        <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover p-1 shadow-md animate-fade-in">
-          {results.map(({ item: task }, index) => (
+        {/* Keyboard shortcut hint */}
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+          {query === "" && (
+            <kbd className="hidden sm:inline-flex h-6 items-center gap-1 rounded border border-border/50 bg-muted/80 px-2 text-xs text-muted-foreground font-medium">
+              <span>/</span>
+            </kbd>
+          )}
+          {query && (
             <button
-              key={task.id}
               onClick={() => {
-                onSelectTask(task);
                 setQuery("");
                 setIsOpen(false);
               }}
-              className={cn(
-                "flex w-full items-center gap-3 rounded-sm px-2 py-2 text-sm text-left",
-                index === selectedIndex
-                  ? "bg-accent text-accent-foreground"
-                  : "hover:bg-accent hover:text-accent-foreground"
-              )}
+              className="p-1 rounded hover:bg-muted transition-colors"
             >
-              <span
+              <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+            </button>
+          )}
+        </div>
+      </motion.div>
+
+      {/* Search Results */}
+      <AnimatePresence>
+        {isOpen && results.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.98 }}
+            transition={{ duration: 0.15 }}
+            className="absolute z-50 mt-2 w-full rounded-xl border bg-popover dark:bg-[#1a1a1a] p-1.5 shadow-xl shadow-black/5 dark:shadow-black/20 overflow-hidden"
+          >
+            {results.map(({ item: task }, index) => (
+              <motion.button
+                key={task.id}
+                initial={false}
+                animate={{
+                  backgroundColor: index === selectedIndex
+                    ? "var(--color-accent)"
+                    : "transparent",
+                }}
+                transition={{ duration: 0.1 }}
+                onClick={() => {
+                  onSelectTask(task);
+                  setQuery("");
+                  setIsOpen(false);
+                }}
                 className={cn(
-                  "flex-1 truncate",
-                  task.completed && "line-through text-muted-foreground"
+                  "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-left transition-colors",
+                  index === selectedIndex
+                    ? "text-accent-foreground"
+                    : "hover:bg-accent hover:text-accent-foreground"
                 )}
               >
-                {task.title}
-              </span>
-              {task.labels && task.labels.length > 0 && (
-                <span className="text-xs text-muted-foreground">
-                  {task.labels.map((l) => l.emoji).join(" ")}
+                <span
+                  className={cn(
+                    "flex-1 truncate font-medium",
+                    task.completed && "line-through text-muted-foreground"
+                  )}
+                >
+                  {task.title}
                 </span>
-              )}
-            </button>
-          ))}
-        </div>
-      )}
+                {task.labels && task.labels.length > 0 && (
+                  <span className="text-xs text-muted-foreground">
+                    {task.labels.map((l) => l.emoji).join(" ")}
+                  </span>
+                )}
+                {index === selectedIndex && (
+                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                )}
+              </motion.button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* No results */}
-      {isOpen && query && results.length === 0 && (
-        <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover p-4 shadow-md animate-fade-in">
-          <p className="text-sm text-muted-foreground text-center">
-            No tasks found for &quot;{query}&quot;
-          </p>
-        </div>
-      )}
+      <AnimatePresence>
+        {isOpen && query && results.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.98 }}
+            transition={{ duration: 0.15 }}
+            className="absolute z-50 mt-2 w-full rounded-xl border bg-popover dark:bg-[#1a1a1a] p-6 shadow-xl shadow-black/5 dark:shadow-black/20"
+          >
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">
+                No tasks found for <span className="font-medium text-foreground">"{query}"</span>
+              </p>
+              <p className="text-xs text-muted-foreground/60 mt-1">
+                Try searching with different keywords
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
