@@ -13,6 +13,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { ViewToggle } from "@/components/ViewToggle";
 import { EmptyState } from "@/components/EmptyState";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { PageSkeleton } from "@/components/Skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
@@ -210,8 +211,11 @@ function HomeContent() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <LoadingSpinner size="lg" />
+      <div className="flex min-h-screen bg-background">
+        <div className="hidden md:block md:w-72 flex-shrink-0 bg-card dark:bg-[#1a1a1a] border-r border-border dark:border-zinc-800" />
+        <main className="flex-1 overflow-y-auto">
+          <PageSkeleton />
+        </main>
       </div>
     );
   }
