@@ -1,9 +1,19 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Syne, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/toast";
 
-const inter = Inter({ subsets: ["latin"] });
+const syne = Syne({
+  subsets: ["latin"],
+  variable: "--font-heading",
+  display: "swap",
+});
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-body",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "TaskFlow - Daily Task Planner",
@@ -33,7 +43,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`min-h-screen bg-background font-sans antialiased ${inter.className}`}>
+      <body className={`min-h-screen bg-background font-body antialiased ${syne.variable} ${dmSans.variable}`}>
         <ToastProvider>
           {children}
         </ToastProvider>
