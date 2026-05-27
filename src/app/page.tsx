@@ -30,6 +30,7 @@ import {
   toggleSubtaskComplete,
 } from "./actions";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import { useRequestDedup } from "@/hooks/use-debounced-pending";
 
 export default function Home() {
   return (
@@ -51,6 +52,8 @@ function HomeContent() {
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
+
+  const { isPending, startRequest, endRequest } = useRequestDedup();
 
   useKeyboardShortcuts([
     { key: "n", ctrl: true, action: () => setIsTaskFormOpen(true) },
@@ -142,6 +145,8 @@ function HomeContent() {
   }, [editingTask, showToast]);
 
   const handleToggleComplete = useCallback((id: string) => {
+    if (isPending(`toggle-${id}`)) return;
+    if (!startRequest(`toggle-${id}`)) return;
     setPendingAction(id);
     startTransition(async () => {
       try {
@@ -152,12 +157,15 @@ function HomeContent() {
       } catch {
         showToast("Failed to toggle task");
       } finally {
+        endRequest(`toggle-${id}`);
         setPendingAction(null);
       }
     });
-  }, [showToast]);
+  }, [showToast, isPending, startRequest, endRequest]);
 
   const handleDeleteTask = useCallback((id: string) => {
+    if (isPending(`delete-${id}`)) return;
+    if (!startRequest(`delete-${id}`)) return;
     setPendingAction(id);
     startTransition(async () => {
       try {
@@ -166,10 +174,11 @@ function HomeContent() {
       } catch {
         showToast("Failed to delete task");
       } finally {
+        endRequest(`delete-${id}`);
         setPendingAction(null);
       }
     });
-  }, [showToast]);
+  }, [showToast, isPending, startRequest, endRequest]);
 
   const handleEditTask = useCallback((task: Task) => {
     setEditingTask(task);
@@ -177,6 +186,8 @@ function HomeContent() {
   }, []);
 
   const handleToggleSubtask = useCallback((subtaskId: string) => {
+    if (isPending(`subtask-${subtaskId}`)) return;
+    if (!startRequest(`subtask-${subtaskId}`)) return;
     startTransition(async () => {
       try {
         await toggleSubtaskComplete(subtaskId);
@@ -184,9 +195,11 @@ function HomeContent() {
         setTasks(Array.isArray(result) ? result : result.tasks);
       } catch {
         showToast("Failed to toggle subtask");
+      } finally {
+        endRequest(`subtask-${subtaskId}`);
       }
     });
-  }, [currentView, currentListId, showToast]);
+  }, [currentView, currentListId, showToast, isPending, startRequest, endRequest]);
 
   const handleSelectTaskFromSearch = useCallback((task: Task) => {
     setEditingTask(task);
