@@ -18,7 +18,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
 import { PRIORITY_COLORS } from "@/types";
 import type { Task } from "@/types";
 import { TimeTrackingDialog } from "@/components/time-tracking-dialog";

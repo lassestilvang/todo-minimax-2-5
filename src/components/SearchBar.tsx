@@ -207,7 +207,7 @@ export function SearchBar({ tasks, onSelectTask }: SearchBarProps) {
           >
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
-                No tasks found for <span className="font-medium text-foreground">"{query}"</span>
+                No tasks found for <span className="font-medium text-foreground">&ldquo;{query}&rdquo;</span>
               </p>
               <p className="text-xs text-muted-foreground/60 mt-1">
                 Try searching with different keywords

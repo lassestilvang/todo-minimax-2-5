@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback, useSyncExternalStore } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import {
   getActiveTimers,
   addActiveTimer,

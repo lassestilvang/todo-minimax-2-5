@@ -11,8 +11,9 @@ export function useDebouncedPending() {
   const timeoutsRef = useRef<{ [key: string]: ReturnType<typeof setTimeout> }>({});
 
   useEffect(() => {
+    const timeouts = timeoutsRef.current;
     return () => {
-      Object.values(timeoutsRef.current).forEach(clearTimeout);
+      Object.values(timeouts).forEach(clearTimeout);
     };
   }, []);
 

@@ -9,7 +9,6 @@ import {
   ListTodo,
   ChevronRight,
   ChevronDown,
-  Plus,
   Tag,
   Sun,
   Moon,
