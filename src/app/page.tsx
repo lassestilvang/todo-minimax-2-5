@@ -298,13 +298,18 @@ function HomeContent() {
                   onAction={() => setIsTaskFormOpen(true)}
                 />
               ) : (
-                visibleTasks.map((task) => (
+                visibleTasks.map((task, index) => (
                   <motion.div
                     key={task.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.2 }}
+                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                    transition={{
+                      duration: 0.35,
+                      delay: Math.min(index * 0.05, 0.3),
+                      ease: [0.23, 1, 0.32, 1],
+                    }}
+                    layout
                   >
                     <TaskCard
                       task={task}
