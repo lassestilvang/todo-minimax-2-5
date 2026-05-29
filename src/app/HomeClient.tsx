@@ -13,6 +13,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { ViewToggle } from "@/components/ViewToggle";
 import { EmptyState } from "@/components/EmptyState";
 import { ActiveTimersIndicator } from "@/components/active-timers";
+import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
@@ -43,10 +44,12 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
   const [showCompleted, setShowCompleted] = useState(true);
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
 
   useKeyboardShortcuts([
     { key: "n", ctrl: true, action: () => setIsTaskFormOpen(true) },
-    { key: "Escape", action: () => { setIsTaskFormOpen(false); setEditingTask(null); } },
+    { key: "Escape", action: () => { setIsTaskFormOpen(false); setEditingTask(null); setIsShortcutsOpen(false); } },
+    { key: "?", action: () => setIsShortcutsOpen((prev) => !prev) },
   ]);
 
   // Get params
@@ -333,6 +336,12 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
         lists={lists}
         labels={labels}
         onTaskChange={(updatedTask) => setEditingTask(updatedTask)}
+      />
+
+      {/* Keyboard Shortcuts Modal */}
+      <KeyboardShortcutsModal
+        isOpen={isShortcutsOpen}
+        onClose={() => setIsShortcutsOpen(false)}
       />
 
       {/* Floating Active Timers Widget */}
