@@ -123,18 +123,26 @@ function TaskCardComponent({ task, onToggleComplete, onDelete, onEdit, onToggleS
         <div className="flex-1 min-w-0">
           {/* Title row */}
           <div className="flex items-center gap-2">
-            <motion.span
-              initial={false}
-              animate={{
-                opacity: task.completed ? 0.5 : 1,
-              }}
-              className={cn(
-                "text-sm font-medium leading-tight",
-                task.completed && "line-through text-muted-foreground"
-              )}
-            >
-              {task.title}
-            </motion.span>
+            <span className="relative inline-block min-w-0">
+              <motion.span
+                initial={false}
+                animate={{
+                  opacity: task.completed ? 0.5 : 1,
+                }}
+                className={cn(
+                  "text-sm font-medium leading-tight block",
+                  task.completed && "text-muted-foreground"
+                )}
+              >
+                {task.title}
+              </motion.span>
+              <motion.span
+                initial={false}
+                animate={{ width: task.completed ? "100%" : "0%" }}
+                transition={{ duration: 0.25, ease: "easeInOut" }}
+                className="absolute left-0 top-1/2 -translate-y-1/2 h-[1px] bg-muted-foreground/60"
+              />
+            </span>
             {/* Priority indicator */}
             {task.priority !== "NONE" && (
               <motion.div
