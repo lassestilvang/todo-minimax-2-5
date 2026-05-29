@@ -12,6 +12,7 @@ import { TaskForm } from "@/components/TaskForm";
 import { SearchBar } from "@/components/SearchBar";
 import { ViewToggle } from "@/components/ViewToggle";
 import { EmptyState } from "@/components/EmptyState";
+import { ActiveTimersIndicator } from "@/components/active-timers";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
@@ -326,6 +327,9 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
         labels={labels}
         onTaskChange={(updatedTask) => setEditingTask(updatedTask)}
       />
+
+      {/* Floating Active Timers Widget */}
+      <ActiveTimersIndicator userId="default" />
     </div>
   );
 }
