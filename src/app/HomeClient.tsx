@@ -88,28 +88,73 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
 
   // Handlers
   const handleCreateTask = useCallback((data: TaskFormData) => {
+    const tempId = `temp-${Date.now()}`;
+    const optimisticTask: Task = {
+      id: tempId,
+      title: data.title,
+      description: data.description || null,
+      completed: false,
+      dueDate: data.dueDate || null,
+      deadline: data.deadline || null,
+      reminder: data.reminder || null,
+      estimate: data.estimate || null,
+      actualTime: null,
+      priority: data.priority,
+      recurringType: data.recurringType || null,
+      recurringCustom: data.recurringCustom || null,
+      attachmentUrl: null,
+      listId: data.listId || null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      labels: data.labelIds ? labels.filter((l) => data.labelIds?.includes(l.id)) : [],
+      subtasks: [],
+      attachments: [],
+    };
+
+    setTasks((prev) => [optimisticTask, ...prev]);
+
     startTransition(async () => {
       try {
         const newTask = await createTask(data);
-        setTasks((prev) => [newTask, ...prev]);
+        setTasks((prev) => prev.map((t) => (t.id === tempId ? newTask : t)));
       } catch {
+        setTasks((prev) => prev.filter((t) => t.id !== tempId));
         showToast("Failed to create task");
       }
     });
-  }, [showToast]);
+  }, [labels, showToast]);
 
   const handleUpdateTask = useCallback((data: TaskFormData) => {
     if (!editingTask) return;
+    const previousTask = editingTask;
+    const updatedTask: Task = {
+      ...editingTask,
+      title: data.title,
+      description: data.description || null,
+      dueDate: data.dueDate || null,
+      deadline: data.deadline || null,
+      reminder: data.reminder || null,
+      estimate: data.estimate || null,
+      priority: data.priority,
+      recurringType: data.recurringType || null,
+      recurringCustom: data.recurringCustom || null,
+      listId: data.listId || null,
+      labels: data.labelIds ? labels.filter((l) => data.labelIds?.includes(l.id)) : [],
+    };
+
+    setTasks((prev) => prev.map((t) => (t.id === editingTask.id ? updatedTask : t)));
+    setEditingTask(null);
+
     startTransition(async () => {
       try {
-        const updated = await updateTask(editingTask.id, data);
+        const updated = await updateTask(previousTask.id, data);
         setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
-        setEditingTask(null);
       } catch {
+        setTasks((prev) => prev.map((t) => (t.id === previousTask.id ? previousTask : t)));
         showToast("Failed to update task");
       }
     });
-  }, [editingTask, showToast]);
+  }, [editingTask, labels, showToast]);
 
   const handleToggleComplete = useCallback((id: string) => {
     // Optimistic toggle
