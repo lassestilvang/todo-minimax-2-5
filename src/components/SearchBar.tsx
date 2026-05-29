@@ -48,6 +48,18 @@ export function SearchBar({ tasks, onSelectTask }: SearchBarProps) {
   }, [results, selectedIndex, isOpen]);
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "/" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", handleGlobalKeyDown);
+    return () => document.removeEventListener("keydown", handleGlobalKeyDown);
+  }, []);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === "Escape" && isOpenRef.current) {
@@ -102,6 +114,7 @@ export function SearchBar({ tasks, onSelectTask }: SearchBarProps) {
       >
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors duration-150" />
         <Input
+          ref={inputRef}
           type="text"
           placeholder="Search tasks..."
           value={query}
