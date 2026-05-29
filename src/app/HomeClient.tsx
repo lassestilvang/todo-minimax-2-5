@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useTransition, useMemo, useCallback } from "react";
+import React, { useState, useTransition, useMemo, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { Plus, Eye, EyeOff } from "lucide-react";
@@ -25,7 +25,6 @@ import {
   getTasks,
 } from "./actions";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
-import { useRequestDedup } from "@/hooks/use-debounced-pending";
 
 interface HomeClientProps {
   initialTasks: Task[];
@@ -37,27 +36,17 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
   const searchParams = useSearchParams();
   const { showToast } = useToast();
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
-  const [lists, setLists] = useState<List[]>(initialLists);
-  const [labels, setLabels] = useState<Label[]>(initialLabels);
+  const [lists] = useState<List[]>(initialLists);
+  const [labels] = useState<Label[]>(initialLabels);
   const [, startTransition] = useTransition();
   const [showCompleted, setShowCompleted] = useState(true);
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [pendingAction, setPendingAction] = useState<string | null>(null);
-
-  const { isPending, startRequest, endRequest } = useRequestDedup();
 
   useKeyboardShortcuts([
     { key: "n", ctrl: true, action: () => setIsTaskFormOpen(true) },
     { key: "Escape", action: () => { setIsTaskFormOpen(false); setEditingTask(null); } },
   ]);
-
-  // Sync props to state when they change
-  useEffect(() => {
-    setTasks(initialTasks);
-    setLists(initialLists);
-    setLabels(initialLabels);
-  }, [initialTasks, initialLists, initialLabels]);
 
   // Get params
   const currentView = (searchParams.get("view") as ViewType) || "all";
@@ -116,9 +105,11 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
   }, [editingTask, showToast]);
 
   const handleToggleComplete = useCallback((id: string) => {
-    if (isPending(`toggle-${id}`)) return;
-    if (!startRequest(`toggle-${id}`)) return;
-    setPendingAction(id);
+    // Optimistic toggle
+    setTasks((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
+    );
+
     startTransition(async () => {
       try {
         const updated = await toggleTaskComplete(id);
@@ -126,30 +117,37 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
           setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
         }
       } catch {
+        // Revert toggle on error
+        setTasks((prev) =>
+          prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
+        );
         showToast("Failed to toggle task");
-      } finally {
-        endRequest(`toggle-${id}`);
-        setPendingAction(null);
       }
     });
-  }, [showToast, isPending, startRequest, endRequest]);
+  }, [showToast]);
 
   const handleDeleteTask = useCallback((id: string) => {
-    if (isPending(`delete-${id}`)) return;
-    if (!startRequest(`delete-${id}`)) return;
-    setPendingAction(id);
+    let deletedTask: Task | undefined;
+    
+    // Optimistic delete
+    setTasks((prev) => {
+      deletedTask = prev.find((t) => t.id === id);
+      return prev.filter((t) => t.id !== id);
+    });
+
     startTransition(async () => {
       try {
         await deleteTask(id);
-        setTasks((prev) => prev.filter((t) => t.id !== id));
       } catch {
+        // Revert delete on error
+        if (deletedTask) {
+          const taskToRestore = deletedTask;
+          setTasks((prev) => [taskToRestore, ...prev]);
+        }
         showToast("Failed to delete task");
-      } finally {
-        endRequest(`delete-${id}`);
-        setPendingAction(null);
       }
     });
-  }, [showToast, isPending, startRequest, endRequest]);
+  }, [showToast]);
 
   const handleEditTask = useCallback((task: Task) => {
     setEditingTask(task);
@@ -157,20 +155,35 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
   }, []);
 
   const handleToggleSubtask = useCallback((subtaskId: string) => {
-    if (isPending(`subtask-${subtaskId}`)) return;
-    if (!startRequest(`subtask-${subtaskId}`)) return;
+    // Optimistic toggle subtask
+    setTasks((prev) =>
+      prev.map((task) => {
+        const subtasks = task.subtasks?.map((st) =>
+          st.id === subtaskId ? { ...st, completed: !st.completed } : st
+        );
+        return { ...task, subtasks };
+      })
+    );
+
     startTransition(async () => {
       try {
         await toggleSubtaskComplete(subtaskId);
         const result = await getTasks(currentView, currentListId);
         setTasks(Array.isArray(result) ? result : result.tasks);
       } catch {
+        // Revert toggle subtask on error
+        setTasks((prev) =>
+          prev.map((task) => {
+            const subtasks = task.subtasks?.map((st) =>
+              st.id === subtaskId ? { ...st, completed: !st.completed } : st
+            );
+            return { ...task, subtasks };
+          })
+        );
         showToast("Failed to toggle subtask");
-      } finally {
-        endRequest(`subtask-${subtaskId}`);
       }
     });
-  }, [currentView, currentListId, showToast, isPending, startRequest, endRequest]);
+  }, [currentView, currentListId, showToast]);
 
   const handleSelectTaskFromSearch = useCallback((task: Task) => {
     setEditingTask(task);
@@ -291,7 +304,6 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
                       onEdit={handleEditTask}
                       onToggleSubtask={handleToggleSubtask}
                       userId="default"
-                      isLoading={pendingAction === task.id}
                     />
                   </motion.div>
                 ))

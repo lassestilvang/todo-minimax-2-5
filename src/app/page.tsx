@@ -47,6 +47,7 @@ async function HomeServerContent({
 
   return (
     <HomeClient
+      key={`${currentView}-${currentListId || "all"}`}
       initialTasks={tasks}
       initialLists={lists}
       initialLabels={labelsData}
