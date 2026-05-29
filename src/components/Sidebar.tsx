@@ -52,20 +52,25 @@ function SidebarComponent({
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const initTheme = () => {
+    let activeTheme: "light" | "dark" = "dark";
+    const stored = localStorage.getItem("theme");
+    if (stored === "light" || stored === "dark") {
+      activeTheme = stored;
+    } else {
+      const isSystemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      activeTheme = isSystemDark ? "dark" : "light";
+    }
+
+    setTimeout(() => {
+      setTheme(activeTheme);
       setMounted(true);
-      const stored = localStorage.getItem("theme");
-      if (stored === "light" || stored === "dark") {
-        setTheme(stored);
-      }
-    };
-    const timeout = setTimeout(initTheme, 0);
-    return () => clearTimeout(timeout);
+    }, 0);
   }, []);
 
   useEffect(() => {
+    if (!mounted) return;
     document.documentElement.classList.toggle("dark", theme === "dark");
-  }, [theme]);
+  }, [theme, mounted]);
 
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
