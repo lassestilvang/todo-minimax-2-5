@@ -5,7 +5,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
-import { X } from "lucide-react";
+import { X, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -260,31 +260,37 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
           {/* Priority */}
           <div>
             <label className="text-sm font-medium">Priority</label>
-            <select
-              {...register("priority")}
-              className="mt-1 flex h-10 w-full appearance-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <option value="NONE">None</option>
-              <option value="LOW">Low</option>
-              <option value="MEDIUM">Medium</option>
-              <option value="HIGH">High</option>
-            </select>
+            <div className="relative mt-1">
+              <select
+                {...register("priority")}
+                className="flex h-10 w-full appearance-none rounded-md border border-input bg-background pl-3 pr-10 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="NONE">None</option>
+                <option value="LOW">Low</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HIGH">High</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none h-4 w-4 text-muted-foreground/70" />
+            </div>
           </div>
 
           {/* List */}
           <div>
             <label className="text-sm font-medium">List</label>
-            <select
-              {...register("listId")}
-              className="mt-1 flex h-10 w-full appearance-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <option value="">No list</option>
-              {lists.map((list) => (
-                <option key={list.id} value={list.id}>
-                  {list.emoji} {list.name}
-                </option>
-              ))}
-            </select>
+            <div className="relative mt-1">
+              <select
+                {...register("listId")}
+                className="flex h-10 w-full appearance-none rounded-md border border-input bg-background pl-3 pr-10 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="">No list</option>
+                {lists.map((list) => (
+                  <option key={list.id} value={list.id}>
+                    {list.emoji} {list.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none h-4 w-4 text-muted-foreground/70" />
+            </div>
           </div>
 
           {/* Labels */}
@@ -331,17 +337,20 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
           {/* Recurring */}
           <div>
             <label className="text-sm font-medium">Recurring</label>
-            <select
-              {...register("recurringType")}
-              className="mt-1 flex h-10 w-full appearance-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <option value="">Never</option>
-              <option value="DAILY">Daily</option>
-              <option value="WEEKLY">Weekly</option>
-              <option value="MONTHLY">Monthly</option>
-              <option value="YEARLY">Yearly</option>
-              <option value="CUSTOM">Custom</option>
-            </select>
+            <div className="relative mt-1">
+              <select
+                {...register("recurringType")}
+                className="flex h-10 w-full appearance-none rounded-md border border-input bg-background pl-3 pr-10 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="">Never</option>
+                <option value="DAILY">Daily</option>
+                <option value="WEEKLY">Weekly</option>
+                <option value="MONTHLY">Monthly</option>
+                <option value="YEARLY">Yearly</option>
+                <option value="CUSTOM">Custom</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none h-4 w-4 text-muted-foreground/70" />
+            </div>
           </div>
 
           {/* Attachments */}
