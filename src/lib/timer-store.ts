@@ -43,18 +43,24 @@ export function subscribeToTimers(callback: () => void): () => void {
   };
 }
 
+let cachedTimers: TimerData[] | null = null;
+
 export function getActiveTimers(): TimerData[] {
   if (typeof window === "undefined") return [];
+  if (cachedTimers !== null) return cachedTimers;
   try {
     const data = localStorage.getItem(TIMER_STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
+    cachedTimers = data ? JSON.parse(data) : [];
+    return cachedTimers!;
   } catch {
-    return [];
+    cachedTimers = [];
+    return cachedTimers;
   }
 }
 
 export function saveActiveTimers(timers: TimerData[]): void {
   if (typeof window === "undefined") return;
+  cachedTimers = timers;
   localStorage.setItem(TIMER_STORAGE_KEY, JSON.stringify(timers));
 }
 

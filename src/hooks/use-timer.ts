@@ -13,8 +13,10 @@ import {
   type TimerData,
 } from "@/lib/timer-store";
 
+const EMPTY_ARRAY: TimerData[] = [];
+
 function getServerSnapshot() {
-  return [];
+  return EMPTY_ARRAY;
 }
 
 export function useActiveTimersStore() {
