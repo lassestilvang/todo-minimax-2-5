@@ -8,6 +8,7 @@ interface PageProps {
   searchParams: Promise<{
     view?: string;
     list?: string;
+    label?: string;
   }>;
 }
 
@@ -15,10 +16,11 @@ export default async function Home({ searchParams }: PageProps) {
   const params = await searchParams;
   const currentView = (params.view as ViewType) || "all";
   const currentListId = params.list || undefined;
+  const currentLabelId = params.label || undefined;
 
   return (
     <Suspense fallback={<FallbackLayout />}>
-      <HomeServerContent currentView={currentView} currentListId={currentListId} />
+      <HomeServerContent currentView={currentView} currentListId={currentListId} currentLabelId={currentLabelId} />
     </Suspense>
   );
 }
@@ -26,14 +28,16 @@ export default async function Home({ searchParams }: PageProps) {
 async function HomeServerContent({
   currentView,
   currentListId,
+  currentLabelId,
 }: {
   currentView: ViewType;
   currentListId?: string;
+  currentLabelId?: string;
 }) {
   const [listsData, labelsData, tasksResult] = await Promise.all([
     getLists(),
     getLabels(),
-    getTasks(currentView, currentListId),
+    getTasks(currentView, currentListId, currentLabelId),
   ]);
 
   // Ensure inbox exists
@@ -47,7 +51,7 @@ async function HomeServerContent({
 
   return (
     <HomeClient
-      key={`${currentView}-${currentListId || "all"}`}
+      key={`${currentView}-${currentListId || "all"}-${currentLabelId || "all"}`}
       initialTasks={tasks}
       initialLists={lists}
       initialLabels={labelsData}

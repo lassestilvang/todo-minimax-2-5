@@ -32,6 +32,7 @@ interface SidebarProps {
   labels: Label[];
   overdueCount: number;
   currentListId?: string;
+  currentLabelId?: string;
   currentView?: string;
 }
 
@@ -40,6 +41,7 @@ function SidebarComponent({
   labels,
   overdueCount,
   currentListId,
+  currentLabelId,
   currentView = "all",
 }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -224,6 +226,10 @@ function SidebarComponent({
                   {lists.map((list, index) => {
                     const isActive = currentListId === list.id;
                     const isInbox = list.name.toLowerCase() === "inbox";
+                    const totalTasks = list.tasks?.length || 0;
+                    const completedTasks = list.tasks?.filter((t) => t.completed).length || 0;
+                    const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
                     return (
                       <motion.div
                         key={list.id}
@@ -242,15 +248,36 @@ function SidebarComponent({
                           onClick={() => setIsOpen(false)}
                         >
                           {isInbox ? (
-                            <Inbox className="h-4 w-4 transition-transform duration-150 group-hover:scale-110" />
+                            <Inbox className="h-4 w-4 transition-transform duration-150 group-hover:scale-110 flex-shrink-0" />
                           ) : (
                             <span
                               className="h-3 w-3 rounded-full flex-shrink-0 transition-transform duration-150 group-hover:scale-110"
                               style={{ backgroundColor: list.color || "#6b7280" }}
                             />
                           )}
-                          <span className="truncate">{list.emoji}</span>
-                          <span className="truncate">{list.name}</span>
+                          {list.emoji && <span className="flex-shrink-0">{list.emoji}</span>}
+                          
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="truncate">{list.name}</span>
+                              {totalTasks > 0 && (
+                                <span className="text-[10px] text-muted-foreground/70 font-semibold font-mono tabular-nums">
+                                  {completedTasks}/{totalTasks}
+                                </span>
+                              )}
+                            </div>
+                            {totalTasks > 0 && (
+                              <div className="mt-1 h-1 w-full bg-zinc-200 dark:bg-zinc-800/80 rounded-full overflow-hidden">
+                                <motion.div
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${percentage}%` }}
+                                  transition={{ duration: 0.4, ease: "easeOut" }}
+                                  className="h-full rounded-full"
+                                  style={{ backgroundColor: list.color || "#3b82f6" }}
+                                />
+                              </div>
+                            )}
+                          </div>
                         </Link>
                       </motion.div>
                     );
@@ -287,27 +314,35 @@ function SidebarComponent({
               >
                 {labels.length > 0 ? (
                   <div className="mt-1 space-y-0.5">
-                    {labels.map((label, index) => (
-                      <motion.div
-                        key={label.id}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.03 }}
-                      >
-                        <Link
-                          href={`/?label=${label.id}`}
-                          className="flex items-center gap-3 px-3 py-2.5 text-sm text-muted-foreground rounded-lg hover:bg-accent hover:text-accent-foreground transition-all duration-150 group"
-                          onClick={() => setIsOpen(false)}
+                    {labels.map((label, index) => {
+                      const isActive = currentLabelId === label.id;
+                      return (
+                        <motion.div
+                          key={label.id}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.03 }}
                         >
-                          <Tag
-                            className="h-4 w-4 transition-transform duration-150 group-hover:scale-110"
-                            style={{ color: label.color || "#6b7280" }}
-                          />
-                          <span className="truncate">{label.emoji}</span>
-                          <span className="truncate">{label.name}</span>
-                        </Link>
-                      </motion.div>
-                    ))}
+                          <Link
+                            href={`/?label=${label.id}`}
+                            className={cn(
+                              "flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg transition-all duration-150 group",
+                              isActive
+                                ? "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground font-medium"
+                                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                            )}
+                            onClick={() => setIsOpen(false)}
+                          >
+                            <Tag
+                              className="h-4 w-4 transition-transform duration-150 group-hover:scale-110"
+                              style={{ color: label.color || "#6b7280" }}
+                            />
+                            <span className="truncate">{label.emoji}</span>
+                            <span className="truncate">{label.name}</span>
+                          </Link>
+                        </motion.div>
+                      );
+                    })}
                   </div>
                 ) : (
                   <p className="px-3 py-3 text-sm text-muted-foreground/60 italic">

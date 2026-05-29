@@ -10,6 +10,7 @@ export interface List {
   isDefault: boolean;
   createdAt: Date;
   updatedAt: Date;
+  tasks?: { completed: boolean }[];
 }
 
 export interface Task {

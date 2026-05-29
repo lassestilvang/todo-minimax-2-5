@@ -1,6 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import type { ListFormData, LabelFormData, TaskFormData } from "@/types";
 import { writeFile, mkdir, unlink } from "fs/promises";
@@ -61,6 +62,13 @@ export async function getLists() {
   try {
     const lists = await prisma.list.findMany({
       orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
+      include: {
+        tasks: {
+          select: {
+            completed: true,
+          },
+        },
+      },
     });
     return lists;
   } catch (error) {
@@ -70,7 +78,16 @@ export async function getLists() {
 }
 
 export async function getOrCreateInbox() {
-  let inbox = await prisma.list.findFirst({ where: { isDefault: true } });
+  let inbox = await prisma.list.findFirst({
+    where: { isDefault: true },
+    include: {
+      tasks: {
+        select: {
+          completed: true,
+        },
+      },
+    },
+  });
   if (!inbox) {
     inbox = await prisma.list.create({
       data: {
@@ -78,6 +95,13 @@ export async function getOrCreateInbox() {
         emoji: "📥",
         isDefault: true,
         color: "#6b7280",
+      },
+      include: {
+        tasks: {
+          select: {
+            completed: true,
+          },
+        },
       },
     });
   }
@@ -243,16 +267,22 @@ export async function deleteTask(id: string) {
   revalidatePath("/");
 }
 
-export async function getTasks(view?: string, listId?: string, cursor?: string, limit = 50) {
+export async function getTasks(view?: string, listId?: string, labelId?: string, cursor?: string, limit = 50) {
   try {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-    const where: Record<string, unknown> = {};
+    const where: Prisma.TaskWhereInput = {};
 
     if (listId) {
       where.listId = listId;
+    }
+
+    if (labelId) {
+      where.labels = {
+        some: { id: labelId },
+      };
     }
 
     switch (view) {

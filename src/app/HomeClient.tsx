@@ -52,9 +52,12 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
   // Get params
   const currentView = (searchParams.get("view") as ViewType) || "all";
   const currentListId = searchParams.get("list") || undefined;
+  const currentLabelId = searchParams.get("label") || undefined;
 
   // Get current list
   const currentList = lists.find((l) => l.id === currentListId);
+  // Get current label
+  const currentLabel = labels.find((l) => l.id === currentLabelId);
 
   // Filter tasks by completion status
   const visibleTasks = useMemo(
@@ -169,7 +172,7 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
     startTransition(async () => {
       try {
         await toggleSubtaskComplete(subtaskId);
-        const result = await getTasks(currentView, currentListId);
+        const result = await getTasks(currentView, currentListId, currentLabelId);
         setTasks(Array.isArray(result) ? result : result.tasks);
       } catch {
         // Revert toggle subtask on error
@@ -184,7 +187,7 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
         showToast("Failed to toggle subtask");
       }
     });
-  }, [currentView, currentListId, showToast]);
+  }, [currentView, currentListId, currentLabelId, showToast]);
 
   const handleSelectTaskFromSearch = useCallback((task: Task) => {
     setEditingTask(task);
@@ -192,6 +195,9 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
   }, []);
 
   const pageTitle = useMemo(() => {
+    if (currentLabel) {
+      return `${currentLabel.emoji || "🏷️"} ${currentLabel.name}`.trim();
+    }
     if (currentList) {
       return `${currentList.emoji || ""} ${currentList.name}`.trim();
     }
@@ -205,7 +211,7 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
       default:
         return "All Tasks";
     }
-  }, [currentList, currentView]);
+  }, [currentList, currentLabel, currentView]);
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -214,6 +220,7 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
         labels={labels}
         overdueCount={overdueCount}
         currentListId={currentListId}
+        currentLabelId={currentLabelId}
         currentView={currentView}
       />
 
