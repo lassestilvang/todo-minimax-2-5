@@ -18,6 +18,7 @@ import { ActiveTimersIndicator } from "@/components/active-timers";
 import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/components/ui/toast";
 import type { Task, List, Label, TaskFormData, ViewType } from "@/types";
 import {
@@ -232,6 +233,13 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
     [optimisticTasks]
   );
 
+  const totalFilteredCount = useMemo(() => filteredTasks.length, [filteredTasks]);
+  const completionPercentage = useMemo(() => {
+    if (totalFilteredCount === 0) return 0;
+    const currentCompleted = filteredTasks.filter((t) => t.completed).length;
+    return (currentCompleted / totalFilteredCount) * 100;
+  }, [filteredTasks]);
+
   // Handlers
   const handleCreateTask = useCallback((data: TaskFormData) => {
     const tempId = `temp-${Date.now()}`;
@@ -406,11 +414,21 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl font-bold font-[family-name:var(--font-heading)]">{pageTitle}</h1>
-                {currentView !== "all" && (
-                  <p className="text-sm text-muted-foreground">
-                    {format(new Date(), "EEEE, MMMM d, yyyy")}
-                  </p>
-                )}
+                <div className="flex items-center gap-3 mt-1">
+                  {currentView !== "all" && (
+                    <p className="text-sm text-muted-foreground">
+                      {format(new Date(), "EEEE, MMMM d, yyyy")}
+                    </p>
+                  )}
+                  {totalFilteredCount > 0 && (
+                    <div className="flex items-center gap-2">
+                      <Progress value={completionPercentage} className="h-1.5 w-24" />
+                      <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
+                        {Math.round(completionPercentage)}% done
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
               <Button onClick={() => setIsTaskFormOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
