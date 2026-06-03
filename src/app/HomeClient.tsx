@@ -135,8 +135,24 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
 
   useKeyboardShortcuts([
     { key: "n", ctrl: true, action: () => setIsTaskFormOpen(true) },
-    { key: "Escape", action: () => { setIsTaskFormOpen(false); setEditingTask(null); setIsShortcutsOpen(false); } },
+    { key: "Escape", action: () => {
+      if (selectedTaskIds.size > 0) {
+        handleClearSelection();
+      } else {
+        setIsTaskFormOpen(false);
+        setEditingTask(null);
+        setIsShortcutsOpen(false);
+      }
+    }},
     { key: "?", action: () => setIsShortcutsOpen((prev) => !prev) },
+    { key: "/", action: () => {
+      const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
+      searchInput?.focus();
+    }},
+    { key: "a", ctrl: true, action: () => {
+      const allIds = filteredTasks.map(t => t.id);
+      setSelectedTaskIds(new Set(allIds));
+    }},
   ]);
 
   // Get params

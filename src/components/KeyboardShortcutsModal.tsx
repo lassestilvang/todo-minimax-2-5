@@ -14,7 +14,13 @@ const SHORTCUT_GROUPS = [
     title: "General Actions",
     shortcuts: [
       { keys: ["Ctrl", "N"], description: "Create a new task" },
-      { keys: ["Esc"], description: "Close modals, form overlays, or cancel editing" },
+      { keys: ["Esc"], description: "Close modals or clear selection" },
+    ],
+  },
+  {
+    title: "Bulk Actions",
+    shortcuts: [
+      { keys: ["Ctrl", "A"], description: "Select all visible tasks" },
     ],
   },
   {
