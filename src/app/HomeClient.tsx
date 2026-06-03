@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from "framer-motion";
 
 import { Sidebar } from "@/components/Sidebar";
 import { TaskCard } from "@/components/TaskCard";
+import { TaskGroup } from "@/components/TaskGroup";
 import { TaskForm } from "@/components/TaskForm";
 import { SearchBar } from "@/components/SearchBar";
 import { ViewToggle } from "@/components/ViewToggle";
@@ -27,6 +28,13 @@ import {
   getTasks,
 } from "./actions";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import {
+  isToday,
+  isTomorrow,
+  isPast,
+  addDays,
+  startOfDay,
+} from "date-fns";
 
 interface HomeClientProps {
   initialTasks: Task[];
@@ -85,13 +93,56 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
   const currentLabel = labels.find((l) => l.id === currentLabelId);
 
   // Filter tasks by completion status
-  const visibleTasks = useMemo(
+  const filteredTasks = useMemo(
     () =>
       showCompleted
         ? optimisticTasks
         : optimisticTasks.filter((t) => !t.completed),
     [optimisticTasks, showCompleted]
   );
+
+  // Group tasks
+  const groupedTasks = useMemo(() => {
+    const now = new Date();
+    const today = startOfDay(now);
+    const tomorrow = addDays(today, 1);
+    const inSevenDays = addDays(today, 7);
+
+    const groups: Record<string, Task[]> = {
+      Overdue: [],
+      Today: [],
+      Tomorrow: [],
+      "This Week": [],
+      Upcoming: [],
+      "No Date": [],
+    };
+
+    filteredTasks.forEach((task) => {
+      if (!task.dueDate) {
+        groups["No Date"].push(task);
+        return;
+      }
+
+      const dueDate = new Date(task.dueDate);
+
+      if (!task.completed && isPast(dueDate) && !isToday(dueDate)) {
+        groups["Overdue"].push(task);
+      } else if (isToday(dueDate)) {
+        groups["Today"].push(task);
+      } else if (isTomorrow(dueDate)) {
+        groups["Tomorrow"].push(task);
+      } else if (dueDate <= inSevenDays) {
+        groups["This Week"].push(task);
+      } else {
+        groups["Upcoming"].push(task);
+      }
+    });
+
+    // Remove empty groups
+    return Object.fromEntries(
+      Object.entries(groups).filter(([, tasks]) => tasks.length > 0)
+    );
+  }, [filteredTasks]);
 
   // Get overdue count
   const overdueCount = useMemo(
@@ -330,44 +381,31 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
 
           {/* Task List */}
           <div className="space-y-2">
-            <AnimatePresence mode="popLayout">
-              {visibleTasks.length === 0 ? (
-                <EmptyState
-                  title="No tasks found"
-                  description={
-                    currentView === "today"
-                      ? "You have no tasks due today. Enjoy your day!"
-                      : "Create your first task to get started"
-                  }
-                  actionLabel="Create Task"
-                  onAction={() => setIsTaskFormOpen(true)}
+            {filteredTasks.length === 0 ? (
+              <EmptyState
+                title="No tasks found"
+                description={
+                  currentView === "today"
+                    ? "You have no tasks due today. Enjoy your day!"
+                    : "Create your first task to get started"
+                }
+                actionLabel="Create Task"
+                onAction={() => setIsTaskFormOpen(true)}
+              />
+            ) : (
+              Object.entries(groupedTasks).map(([title, tasks]) => (
+                <TaskGroup
+                  key={title}
+                  title={title}
+                  tasks={tasks}
+                  onToggleComplete={handleToggleComplete}
+                  onDelete={handleDeleteTask}
+                  onEdit={handleEditTask}
+                  onToggleSubtask={handleToggleSubtask}
+                  userId="default"
                 />
-              ) : (
-                visibleTasks.map((task, index) => (
-                  <motion.div
-                    key={task.id}
-                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                    transition={{
-                      duration: 0.35,
-                      delay: Math.min(index * 0.05, 0.3),
-                      ease: [0.23, 1, 0.32, 1],
-                    }}
-                    layout
-                  >
-                    <TaskCard
-                      task={task}
-                      onToggleComplete={handleToggleComplete}
-                      onDelete={handleDeleteTask}
-                      onEdit={handleEditTask}
-                      onToggleSubtask={handleToggleSubtask}
-                      userId="default"
-                    />
-                  </motion.div>
-                ))
-              )}
-            </AnimatePresence>
+              ))
+            )}
           </div>
         </div>
       </main>
