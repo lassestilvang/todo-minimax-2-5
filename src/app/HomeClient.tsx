@@ -9,6 +9,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Sidebar } from "@/components/Sidebar";
 import { TaskCard } from "@/components/TaskCard";
 import { TaskGroup } from "@/components/TaskGroup";
+import { BulkActionToolbar } from "@/components/BulkActionToolbar";
 import { TaskForm } from "@/components/TaskForm";
 import { SearchBar } from "@/components/SearchBar";
 import { ViewToggle } from "@/components/ViewToggle";
@@ -53,6 +54,62 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+  const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
+
+  const handleSelectTask = useCallback((id: string) => {
+    setSelectedTaskIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleClearSelection = useCallback(() => {
+    setSelectedTaskIds(new Set());
+  }, []);
+
+  const handleBulkToggleComplete = useCallback(() => {
+    const ids = Array.from(selectedTaskIds);
+    if (ids.length === 0) return;
+
+    startTransition(async () => {
+      // Optimistic toggle all
+      ids.forEach((id) => addOptimisticTaskAction({ type: "toggle", payload: { id } }));
+      
+      try {
+        await Promise.all(ids.map((id) => toggleTaskComplete(id)));
+        const result = await getTasks(currentView, currentListId, currentLabelId);
+        setTasks(Array.isArray(result) ? result : result.tasks);
+        setSelectedTaskIds(new Set());
+      } catch {
+        showToast("Failed to toggle some tasks");
+      }
+    });
+  }, [selectedTaskIds, addOptimisticTaskAction, currentView, currentListId, currentLabelId, showToast]);
+
+  const handleBulkDelete = useCallback(() => {
+    const ids = Array.from(selectedTaskIds);
+    if (ids.length === 0) return;
+
+    if (!confirm(`Are you sure you want to delete ${ids.length} tasks?`)) return;
+
+    startTransition(async () => {
+      // Optimistic delete all
+      ids.forEach((id) => addOptimisticTaskAction({ type: "delete", payload: { id } }));
+
+      try {
+        await Promise.all(ids.map((id) => deleteTask(id)));
+        setTasks((prev) => prev.filter((t) => !ids.includes(t.id)));
+        setSelectedTaskIds(new Set());
+      } catch {
+        showToast("Failed to delete some tasks");
+      }
+    });
+  }, [selectedTaskIds, addOptimisticTaskAction, showToast]);
 
   const [optimisticTasks, addOptimisticTaskAction] = useOptimistic(
     tasks,
@@ -403,12 +460,22 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
                   onEdit={handleEditTask}
                   onToggleSubtask={handleToggleSubtask}
                   userId="default"
+                  selectedTaskIds={selectedTaskIds}
+                  onSelectTask={handleSelectTask}
                 />
               ))
             )}
           </div>
         </div>
       </main>
+
+      {/* Bulk Action Toolbar */}
+      <BulkActionToolbar
+        selectedCount={selectedTaskIds.size}
+        onClearSelection={handleClearSelection}
+        onToggleComplete={handleBulkToggleComplete}
+        onDelete={handleBulkDelete}
+      />
 
       {/* Task Form Modal */}
       <TaskForm

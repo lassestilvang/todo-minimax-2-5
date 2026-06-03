@@ -39,9 +39,21 @@ interface TaskCardProps {
   onToggleSubtask?: (id: string) => void;
   userId?: string;
   isLoading?: boolean;
+  isSelected?: boolean;
+  onSelect?: (id: string) => void;
 }
 
-function TaskCardComponent({ task, onToggleComplete, onDelete, onEdit, onToggleSubtask, userId = "default", isLoading }: TaskCardProps) {
+function TaskCardComponent({
+  task,
+  onToggleComplete,
+  onDelete,
+  onEdit,
+  onToggleSubtask,
+  userId = "default",
+  isLoading,
+  isSelected,
+  onSelect,
+}: TaskCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showTimeDialog, setShowTimeDialog] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -94,6 +106,18 @@ function TaskCardComponent({ task, onToggleComplete, onDelete, onEdit, onToggleS
       )}
 
       <div className={cn("flex items-start gap-3 p-4", priorityColor && "pl-5")}>
+        {/* Selection Checkbox */}
+        <div className={cn(
+          "mt-0.5 flex-shrink-0 transition-all duration-200",
+          (isHovered || isSelected) ? "w-5 opacity-100" : "w-0 opacity-0 overflow-hidden"
+        )}>
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={() => onSelect?.(task.id)}
+            className="h-5 w-5 rounded-md border-2"
+          />
+        </div>
+
         {/* Checkbox */}
         <div className="mt-0.5 flex-shrink-0 relative">
           <motion.div

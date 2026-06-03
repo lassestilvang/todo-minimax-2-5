@@ -13,6 +13,8 @@ interface TaskGroupProps {
   onEdit: (task: Task) => void;
   onToggleSubtask: (id: string) => void;
   userId?: string;
+  selectedTaskIds?: Set<string>;
+  onSelectTask?: (id: string) => void;
 }
 
 export function TaskGroup({
@@ -23,6 +25,8 @@ export function TaskGroup({
   onEdit,
   onToggleSubtask,
   userId = "default",
+  selectedTaskIds,
+  onSelectTask,
 }: TaskGroupProps) {
   if (tasks.length === 0) return null;
 
@@ -54,6 +58,8 @@ export function TaskGroup({
                 onEdit={onEdit}
                 onToggleSubtask={onToggleSubtask}
                 userId={userId}
+                isSelected={selectedTaskIds?.has(task.id)}
+                onSelect={onSelectTask}
               />
             </motion.div>
           ))}
