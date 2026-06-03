@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Keyboard, Search, Sparkles, X, CornerDownLeft } from "lucide-react";
+import { Keyboard, Sparkles } from "lucide-react";
 
 interface KeyboardShortcutsModalProps {
   isOpen: boolean;
