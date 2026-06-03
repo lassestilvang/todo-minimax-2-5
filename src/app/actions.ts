@@ -7,6 +7,7 @@ import type { ListFormData, LabelFormData, TaskFormData } from "@/types";
 import { writeFile, mkdir, unlink } from "fs/promises";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
+import { addDays, addWeeks, addMonths, addYears } from "date-fns";
 
 // List Actions
 export async function createList(data: ListFormData) {
@@ -233,12 +234,17 @@ export async function updateTask(id: string, data: Partial<TaskFormData>) {
 }
 
 export async function toggleTaskComplete(id: string) {
-  const task = await prisma.task.findUnique({ where: { id } });
+  const task = await prisma.task.findUnique({ 
+    where: { id },
+    include: { labels: true }
+  });
   if (!task) return null;
+
+  const newCompletedState = !task.completed;
 
   const updated = await prisma.task.update({
     where: { id },
-    data: { completed: !task.completed },
+    data: { completed: newCompletedState },
     include: { labels: true, subtasks: true },
   });
 
@@ -249,6 +255,43 @@ export async function toggleTaskComplete(id: string) {
       taskId: task.id,
     },
   });
+
+  // Handle recurring tasks
+  if (newCompletedState && task.recurringType && task.dueDate) {
+    let nextDueDate = new Date(task.dueDate);
+    
+    switch (task.recurringType) {
+      case "DAILY":
+        nextDueDate = addDays(nextDueDate, 1);
+        break;
+      case "WEEKLY":
+        nextDueDate = addWeeks(nextDueDate, 1);
+        break;
+      case "MONTHLY":
+        nextDueDate = addMonths(nextDueDate, 1);
+        break;
+      case "YEARLY":
+        nextDueDate = addYears(nextDueDate, 1);
+        break;
+      // CUSTOM could be implemented later if needed
+    }
+
+    // Create next instance of the task
+    await prisma.task.create({
+      data: {
+        title: task.title,
+        description: task.description,
+        dueDate: nextDueDate,
+        priority: task.priority,
+        recurringType: task.recurringType,
+        recurringCustom: task.recurringCustom,
+        listId: task.listId,
+        labels: {
+          connect: task.labels.map((l) => ({ id: l.id })),
+        },
+      },
+    });
+  }
 
   revalidatePath("/");
   return updated;
