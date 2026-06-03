@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition, useMemo, useCallback } from "react";
+import React, { useState, useTransition, useMemo, useCallback, useOptimistic } from "react";
 import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { Plus, Eye, EyeOff } from "lucide-react";
@@ -46,6 +46,28 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
 
+  const [optimisticTasks, addOptimisticTaskAction] = useOptimistic(
+    tasks,
+    (state, action: { type: string; payload: any }) => {
+      switch (action.type) {
+        case "toggle":
+          return state.map((t) =>
+            t.id === action.payload.id ? { ...t, completed: !t.completed } : t
+          );
+        case "delete":
+          return state.filter((t) => t.id !== action.payload.id);
+        case "create":
+          return [action.payload.task, ...state];
+        case "update":
+          return state.map((t) =>
+            t.id === action.payload.id ? { ...t, ...action.payload.data } : t
+          );
+        default:
+          return state;
+      }
+    }
+  );
+
   useKeyboardShortcuts([
     { key: "n", ctrl: true, action: () => setIsTaskFormOpen(true) },
     { key: "Escape", action: () => { setIsTaskFormOpen(false); setEditingTask(null); setIsShortcutsOpen(false); } },
@@ -66,24 +88,24 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
   const visibleTasks = useMemo(
     () =>
       showCompleted
-        ? tasks
-        : tasks.filter((t) => !t.completed),
-    [tasks, showCompleted]
+        ? optimisticTasks
+        : optimisticTasks.filter((t) => !t.completed),
+    [optimisticTasks, showCompleted]
   );
 
   // Get overdue count
   const overdueCount = useMemo(
     () =>
-      tasks.filter(
+      optimisticTasks.filter(
         (t) => !t.completed && t.dueDate && new Date(t.dueDate) < new Date()
       ).length,
-    [tasks]
+    [optimisticTasks]
   );
 
   // Get completed count
   const completedCount = useMemo(
-    () => tasks.filter((t) => t.completed).length,
-    [tasks]
+    () => optimisticTasks.filter((t) => t.completed).length,
+    [optimisticTasks]
   );
 
   // Handlers
@@ -157,49 +179,30 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
   }, [editingTask, labels, showToast]);
 
   const handleToggleComplete = useCallback((id: string) => {
-    // Optimistic toggle
-    setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
-    );
-
     startTransition(async () => {
+      addOptimisticTaskAction({ type: "toggle", payload: { id } });
       try {
         const updated = await toggleTaskComplete(id);
         if (updated) {
           setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
         }
       } catch {
-        // Revert toggle on error
-        setTasks((prev) =>
-          prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
-        );
         showToast("Failed to toggle task");
       }
     });
-  }, [showToast]);
+  }, [addOptimisticTaskAction, showToast]);
 
   const handleDeleteTask = useCallback((id: string) => {
-    let deletedTask: Task | undefined;
-    
-    // Optimistic delete
-    setTasks((prev) => {
-      deletedTask = prev.find((t) => t.id === id);
-      return prev.filter((t) => t.id !== id);
-    });
-
     startTransition(async () => {
+      addOptimisticTaskAction({ type: "delete", payload: { id } });
       try {
         await deleteTask(id);
+        setTasks((prev) => prev.filter((t) => t.id !== id));
       } catch {
-        // Revert delete on error
-        if (deletedTask) {
-          const taskToRestore = deletedTask;
-          setTasks((prev) => [taskToRestore, ...prev]);
-        }
         showToast("Failed to delete task");
       }
     });
-  }, [showToast]);
+  }, [addOptimisticTaskAction, showToast]);
 
   const handleEditTask = useCallback((task: Task) => {
     setEditingTask(task);
