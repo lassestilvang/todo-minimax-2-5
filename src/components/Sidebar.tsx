@@ -15,9 +15,11 @@ import {
   Menu,
   X,
   Inbox,
+  Settings2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { ListManagerDialog, LabelManagerDialog } from "@/components/ManagerDialogs";
 import type { List, Label } from "@/types";
 
 const VIEWS = [
@@ -52,6 +54,8 @@ function SidebarComponent({
   });
   const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [mounted, setMounted] = useState(false);
+  const [listManagerOpen, setListManagerOpen] = useState(false);
+  const [labelManagerOpen, setLabelManagerOpen] = useState(false);
 
   useEffect(() => {
     let activeTheme: "light" | "dark" = "dark";
@@ -200,19 +204,30 @@ function SidebarComponent({
 
         {/* Lists Section */}
         <div className="mb-4">
-          <button
-            onClick={() => toggleSection("lists")}
-            className="flex items-center justify-between w-full px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors duration-150"
-          >
-            <span>Lists</span>
-            <motion.div
-              initial={false}
-              animate={{ rotate: expandedSections.lists ? 0 : -90 }}
-              transition={{ duration: 0.2 }}
+          <div className="flex items-center pr-1">
+            <button
+              onClick={() => toggleSection("lists")}
+              className="flex-1 flex items-center px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors duration-150"
             >
-              <ChevronRight className="h-4 w-4" />
-            </motion.div>
-          </button>
+              <span>Lists</span>
+              <motion.div
+                initial={false}
+                animate={{ rotate: expandedSections.lists ? 0 : -90 }}
+                transition={{ duration: 0.2 }}
+                className="ml-2"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </motion.div>
+            </button>
+            <button
+              onClick={() => setListManagerOpen(true)}
+              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+              aria-label="Manage lists"
+              title="Manage lists"
+            >
+              <Settings2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
           <AnimatePresence>
             {expandedSections.lists && (
               <motion.div
@@ -290,19 +305,30 @@ function SidebarComponent({
 
         {/* Labels Section */}
         <div className="mb-4">
-          <button
-            onClick={() => toggleSection("labels")}
-            className="flex items-center justify-between w-full px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors duration-150"
-          >
-            <span>Labels</span>
-            <motion.div
-              initial={false}
-              animate={{ rotate: expandedSections.labels ? 0 : -90 }}
-              transition={{ duration: 0.2 }}
+          <div className="flex items-center pr-1">
+            <button
+              onClick={() => toggleSection("labels")}
+              className="flex-1 flex items-center px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors duration-150"
             >
-              <ChevronRight className="h-4 w-4" />
-            </motion.div>
-          </button>
+              <span>Labels</span>
+              <motion.div
+                initial={false}
+                animate={{ rotate: expandedSections.labels ? 0 : -90 }}
+                transition={{ duration: 0.2 }}
+                className="ml-2"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </motion.div>
+            </button>
+            <button
+              onClick={() => setLabelManagerOpen(true)}
+              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+              aria-label="Manage labels"
+              title="Manage labels"
+            >
+              <Settings2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
           <AnimatePresence>
             {expandedSections.labels && (
               <motion.div
@@ -413,6 +439,17 @@ function SidebarComponent({
       >
         {sidebarContent}
       </motion.div>
+
+      <ListManagerDialog
+        isOpen={listManagerOpen}
+        onClose={() => setListManagerOpen(false)}
+        lists={lists}
+      />
+      <LabelManagerDialog
+        isOpen={labelManagerOpen}
+        onClose={() => setLabelManagerOpen(false)}
+        labels={labels}
+      />
     </>
   );
 }
