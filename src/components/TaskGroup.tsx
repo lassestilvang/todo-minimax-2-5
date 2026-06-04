@@ -17,7 +17,7 @@ interface TaskGroupProps {
   onSelectTask?: (id: string) => void;
 }
 
-export const TaskGroup = React.memo(({
+function TaskGroupComponent({
   title,
   tasks,
   onToggleComplete,
@@ -27,7 +27,7 @@ export const TaskGroup = React.memo(({
   userId = "default",
   selectedTaskIds,
   onSelectTask,
-}: TaskGroupProps) => {
+}: TaskGroupProps) {
   if (tasks.length === 0) return null;
 
   return (
@@ -67,4 +67,7 @@ export const TaskGroup = React.memo(({
       </div>
     </div>
   );
-});
+}
+
+TaskGroupComponent.displayName = "TaskGroup";
+export const TaskGroup = React.memo(TaskGroupComponent);

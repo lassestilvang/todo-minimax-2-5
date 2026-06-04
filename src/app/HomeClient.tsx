@@ -4,10 +4,8 @@ import React, { useState, useTransition, useMemo, useCallback, useOptimistic } f
 import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { Plus, Eye, EyeOff } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
 
 import { Sidebar } from "@/components/Sidebar";
-import { TaskCard } from "@/components/TaskCard";
 import { TaskGroup } from "@/components/TaskGroup";
 import { BulkActionToolbar } from "@/components/BulkActionToolbar";
 import { TaskForm } from "@/components/TaskForm";
@@ -57,6 +55,42 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
 
+  // Get URL params first so they're available to handlers below
+  const currentView = (searchParams.get("view") as ViewType) || "all";
+  const currentListId = searchParams.get("list") || undefined;
+  const currentLabelId = searchParams.get("label") || undefined;
+
+  const [optimisticTasks, addOptimisticTaskAction] = useOptimistic(
+    tasks,
+    (
+      state: Task[],
+      action: { type: "toggle" | "delete" | "create" | "update"; payload: unknown }
+    ) => {
+      switch (action.type) {
+        case "toggle": {
+          const { id } = action.payload as { id: string };
+          return state.map((t) =>
+            t.id === id ? { ...t, completed: !t.completed } : t
+          );
+        }
+        case "delete": {
+          const { id } = action.payload as { id: string };
+          return state.filter((t) => t.id !== id);
+        }
+        case "create": {
+          const { task } = action.payload as { task: Task };
+          return [task, ...state];
+        }
+        case "update": {
+          const { id, data } = action.payload as { id: string; data: Partial<Task> };
+          return state.map((t) => (t.id === id ? { ...t, ...data } : t));
+        }
+        default:
+          return state;
+      }
+    }
+  );
+
   const handleSelectTask = useCallback((id: string) => {
     setSelectedTaskIds((prev) => {
       const next = new Set(prev);
@@ -78,9 +112,8 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
     if (ids.length === 0) return;
 
     startTransition(async () => {
-      // Optimistic toggle all
       ids.forEach((id) => addOptimisticTaskAction({ type: "toggle", payload: { id } }));
-      
+
       try {
         await Promise.all(ids.map((id) => toggleTaskComplete(id)));
         const result = await getTasks(currentView, currentListId, currentLabelId);
@@ -99,7 +132,6 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
     if (!confirm(`Are you sure you want to delete ${ids.length} tasks?`)) return;
 
     startTransition(async () => {
-      // Optimistic delete all
       ids.forEach((id) => addOptimisticTaskAction({ type: "delete", payload: { id } }));
 
       try {
@@ -111,28 +143,6 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
       }
     });
   }, [selectedTaskIds, addOptimisticTaskAction, showToast]);
-
-  const [optimisticTasks, addOptimisticTaskAction] = useOptimistic(
-    tasks,
-    (state, action: { type: string; payload: any }) => {
-      switch (action.type) {
-        case "toggle":
-          return state.map((t) =>
-            t.id === action.payload.id ? { ...t, completed: !t.completed } : t
-          );
-        case "delete":
-          return state.filter((t) => t.id !== action.payload.id);
-        case "create":
-          return [action.payload.task, ...state];
-        case "update":
-          return state.map((t) =>
-            t.id === action.payload.id ? { ...t, ...action.payload.data } : t
-          );
-        default:
-          return state;
-      }
-    }
-  );
 
   useKeyboardShortcuts([
     { key: "n", ctrl: true, action: () => setIsTaskFormOpen(true) },
@@ -151,15 +161,10 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
       searchInput?.focus();
     }},
     { key: "a", ctrl: true, action: () => {
-      const allIds = filteredTasks.map(t => t.id);
+      const allIds = filteredTasksRef.current.map(t => t.id);
       setSelectedTaskIds(new Set(allIds));
     }},
   ]);
-
-  // Get params
-  const currentView = (searchParams.get("view") as ViewType) || "all";
-  const currentListId = searchParams.get("list") || undefined;
-  const currentLabelId = searchParams.get("label") || undefined;
 
   // Get current list
   const currentList = lists.find((l) => l.id === currentListId);
@@ -174,6 +179,13 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
         : optimisticTasks.filter((t) => !t.completed),
     [optimisticTasks, showCompleted]
   );
+
+  // Keep ref in sync with filtered tasks so the Ctrl+A shortcut can read
+  // the latest visible tasks without re-creating the shortcut handler.
+  const filteredTasksRef = React.useRef(filteredTasks);
+  React.useEffect(() => {
+    filteredTasksRef.current = filteredTasks;
+  }, [filteredTasks]);
 
   // Group tasks
   const groupedTasks = useMemo(() => {
