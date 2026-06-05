@@ -147,6 +147,8 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
     setValue("labelIds", newLabels, { shouldValidate: true });
   };
 
+  const formRef = useRef<HTMLFormElement>(null);
+
   const handleFormSubmit = (data: z.infer<typeof taskSchema>) => {
     const estimateNum =
       typeof data.estimate === "string" && data.estimate.trim() !== ""
@@ -162,6 +164,14 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
     } as TaskFormData);
     onClose();
   };
+
+  // Ctrl+Enter to submit from any field, including textarea
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      e.preventDefault();
+      formRef.current?.requestSubmit();
+    }
+  }, []);
 
   const handleDueDateChange = (value: string) => {
     setValue("dueDate", value ? new Date(value) : undefined, { shouldValidate: false });
@@ -276,7 +286,7 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
           <DialogTitle>{task ? "Edit Task" : "New Task"}</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+        <form ref={formRef} onSubmit={handleSubmit(handleFormSubmit)} onKeyDown={handleKeyDown} className="space-y-4">
           {/* Title */}
           <div>
             <label htmlFor="task-title-input" className="text-sm font-medium">Title</label>
@@ -285,6 +295,7 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
               {...register("title")}
               placeholder="Task title"
               autoComplete="off"
+              autoFocus
               className={cn("mt-1", errors.title && "border-destructive")}
             />
             {errors.title && (
@@ -315,10 +326,36 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
                 onChange={(e) => handleDueDateChange(e.target.value)}
                 className="flex-1"
               />
-              {watchedDueDate && (
+              {watchedDueDate ? (
                 <Button type="button" variant="ghost" size="icon" onClick={() => setValue("dueDate", undefined)}>
                   <X className="h-4 w-4" />
                 </Button>
+              ) : (
+                <div className="flex gap-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      setValue("dueDate", today);
+                    }}
+                    className="px-2 py-1 text-[10px] font-medium uppercase tracking-wider rounded-md bg-muted hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Today
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const tomorrow = new Date();
+                      tomorrow.setDate(tomorrow.getDate() + 1);
+                      tomorrow.setHours(0, 0, 0, 0);
+                      setValue("dueDate", tomorrow);
+                    }}
+                    className="px-2 py-1 text-[10px] font-medium uppercase tracking-wider rounded-md bg-muted hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Tomorrow
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -605,7 +642,10 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
             </div>
           )}
 
-          <DialogFooter>
+          <DialogFooter className="items-center">
+            <span className="text-[10px] text-muted-foreground/50 font-medium mr-auto hidden sm:inline">
+              ⌘Enter to save
+            </span>
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
