@@ -26,6 +26,7 @@ import {
   deleteTask,
   toggleTaskComplete,
   toggleSubtaskComplete,
+  clearCompletedTasks,
   getTasks,
 } from "./actions";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
@@ -339,6 +340,21 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
     });
   }, [addOptimisticTaskAction, showToast]);
 
+  const handleClearCompleted = useCallback(() => {
+    const doneCount = optimisticTasks.filter((t) => t.completed).length;
+    if (doneCount === 0) return;
+    if (!confirm(`Clear all ${doneCount} completed task${doneCount !== 1 ? "s" : ""}?`)) return;
+
+    startTransition(async () => {
+      try {
+        await clearCompletedTasks();
+        setTasks((prev) => prev.filter((t) => !t.completed));
+      } catch {
+        showToast("Failed to clear completed tasks");
+      }
+    });
+  }, [optimisticTasks, showToast]);
+
   const handleDeleteTask = useCallback((id: string) => {
     startTransition(async () => {
       addOptimisticTaskAction({ type: "delete", payload: { id } });
@@ -504,9 +520,17 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
               )}
             </button>
             {completedCount > 0 && (
-              <Badge variant="secondary">
-                {completedCount} completed
-              </Badge>
+              <>
+                <Badge variant="secondary">
+                  {completedCount} completed
+                </Badge>
+                <button
+                  onClick={handleClearCompleted}
+                  className="text-xs text-muted-foreground/60 hover:text-destructive transition-colors ml-1"
+                >
+                  Clear all
+                </button>
+              </>
             )}
           </div>
 

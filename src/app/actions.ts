@@ -643,6 +643,31 @@ async function deleteFile(filePath: string): Promise<void> {
   }
 }
 
+// Clear all completed tasks
+export async function clearCompletedTasks() {
+  const completed = await prisma.task.findMany({
+    where: { completed: true },
+    select: { id: true },
+  });
+
+  const ids = completed.map((t) => t.id);
+
+  // Delete attachments for completed tasks
+  const attachments = await prisma.attachment.findMany({
+    where: { taskId: { in: ids } },
+  });
+  for (const att of attachments) {
+    await deleteFile(att.path);
+  }
+
+  await prisma.task.deleteMany({
+    where: { completed: true },
+  });
+
+  revalidatePath("/");
+  return ids;
+}
+
 // Search
 export async function searchTasks(query: string) {
   const trimmed = query.trim();
