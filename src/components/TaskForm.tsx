@@ -1,11 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
-import { X, ChevronDown } from "lucide-react";
+import { X, ChevronDown, Plus, Trash2, ListChecks } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,8 +23,13 @@ import { AttachmentList } from "@/components/attachment-list";
 import {
   deleteAttachment,
   getTaskById,
+  createSubtask,
+  updateSubtask,
+  toggleSubtaskComplete,
+  deleteSubtask,
 } from "@/app/actions";
-import type { Task, List, Label, RecurringType, TaskFormData } from "@/types";
+import { useToast } from "@/components/ui/toast";
+import type { Task, List, Label, RecurringType, Subtask, TaskFormData } from "@/types";
 
 const taskSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -31,7 +37,7 @@ const taskSchema = z.object({
   dueDate: z.date().optional(),
   deadline: z.date().optional(),
   reminder: z.date().optional(),
-  estimate: z.number().optional(),
+  estimate: z.string().optional(),
   priority: z.enum(["HIGH", "MEDIUM", "LOW", "NONE"]),
   recurringType: z.enum(["DAILY", "WEEKLY", "MONTHLY", "YEARLY", "CUSTOM"]).optional(),
   recurringCustom: z.string().optional(),
@@ -50,6 +56,7 @@ interface TaskFormProps {
 }
 
 export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTaskChange }: TaskFormProps) {
+  const { showToast } = useToast();
   const {
     register,
     handleSubmit,
@@ -82,8 +89,25 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
   // Watch reminder from form
   const watchedReminder = useWatch({ control, name: "reminder" });
 
+  // Subtask editor local state
+  const [subtasks, setSubtasks] = useState<Subtask[]>(task?.subtasks ?? []);
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
+  const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null);
+  const [editingSubtaskTitle, setEditingSubtaskTitle] = useState("");
+  const [subtaskBusy, setSubtaskBusy] = useState(false);
+  const newSubtaskRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setSubtasks(task?.subtasks ?? []);
+      setNewSubtaskTitle("");
+      setEditingSubtaskId(null);
+      setEditingSubtaskTitle("");
+    }
+  }, [task, isOpen]);
+
   // Reset form when task changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
       if (task) {
         reset({
@@ -124,8 +148,13 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
   };
 
   const handleFormSubmit = (data: z.infer<typeof taskSchema>) => {
+    const estimateNum =
+      typeof data.estimate === "string" && data.estimate.trim() !== ""
+        ? Number(data.estimate)
+        : undefined;
     onSubmit({
       ...data,
+      estimate: Number.isFinite(estimateNum) ? estimateNum : undefined,
       dueDate: watchedDueDate,
       deadline: watchedDeadline,
       reminder: watchedReminder,
@@ -138,24 +167,107 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
     setValue("dueDate", value ? new Date(value) : undefined, { shouldValidate: false });
   };
 
-  const handleDeleteAttachment = async (id: string) => {
-    await deleteAttachment(id);
+  const refreshTask = useCallback(async () => {
     if (task && onTaskChange) {
       const updated = await getTaskById(task.id);
-      if (updated) {
-        onTaskChange(updated);
-      }
+      if (updated) onTaskChange(updated);
     }
+  }, [task, onTaskChange]);
+
+  const handleDeleteAttachment = async (id: string) => {
+    await deleteAttachment(id);
+    await refreshTask();
   };
 
   const handleUploadComplete = async () => {
-    if (task && onTaskChange) {
-      const updated = await getTaskById(task.id);
-      if (updated) {
-        onTaskChange(updated);
-      }
-    }
+    await refreshTask();
   };
+
+  // Subtask handlers — only available when editing an existing task
+  const canManageSubtasks = !!task?.id;
+
+  const handleAddSubtask = useCallback(
+    async (e?: React.FormEvent) => {
+      e?.preventDefault();
+      if (!task?.id) return;
+      const title = newSubtaskTitle.trim();
+      if (!title || subtaskBusy) return;
+      setSubtaskBusy(true);
+      try {
+        const created = await createSubtask(task.id, title);
+        setSubtasks((prev) => [...prev, created]);
+        setNewSubtaskTitle("");
+        newSubtaskRef.current?.focus();
+        await refreshTask();
+      } catch {
+        showToast("Failed to add subtask", "error");
+      } finally {
+        setSubtaskBusy(false);
+      }
+    },
+    [task?.id, newSubtaskTitle, subtaskBusy, refreshTask, showToast]
+  );
+
+  const handleToggleSubtask = useCallback(
+    async (id: string) => {
+      // Optimistic toggle
+      setSubtasks((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, completed: !s.completed } : s))
+      );
+      try {
+        await toggleSubtaskComplete(id);
+        await refreshTask();
+      } catch {
+        setSubtasks((prev) =>
+          prev.map((s) => (s.id === id ? { ...s, completed: !s.completed } : s))
+        );
+        showToast("Failed to toggle subtask", "error");
+      }
+    },
+    [refreshTask, showToast]
+  );
+
+  const startEditSubtask = useCallback((subtask: Subtask) => {
+    setEditingSubtaskId(subtask.id);
+    setEditingSubtaskTitle(subtask.title);
+  }, []);
+
+  const saveSubtaskEdit = useCallback(
+    async (id: string) => {
+      const title = editingSubtaskTitle.trim();
+      if (!title) {
+        setEditingSubtaskId(null);
+        return;
+      }
+      try {
+        const updated = await updateSubtask(id, title);
+        setSubtasks((prev) => prev.map((s) => (s.id === id ? updated : s)));
+        setEditingSubtaskId(null);
+        setEditingSubtaskTitle("");
+      } catch {
+        showToast("Failed to update subtask", "error");
+      }
+    },
+    [editingSubtaskTitle, showToast]
+  );
+
+  const handleDeleteSubtask = useCallback(
+    async (id: string) => {
+      setSubtasks((prev) => prev.filter((s) => s.id !== id));
+      try {
+        await deleteSubtask(id);
+        await refreshTask();
+      } catch {
+        showToast("Failed to delete subtask", "error");
+      }
+    },
+    [refreshTask, showToast]
+  );
+
+  const completedSubtasks = subtasks.filter((s) => s.completed).length;
+  const totalSubtasks = subtasks.length;
+  const subtaskProgress =
+    totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -324,13 +436,17 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
 
           {/* Estimate */}
           <div>
-            <label className="text-sm font-medium">Time Estimate (minutes)</label>
+            <label htmlFor="task-estimate" className="text-sm font-medium">
+              Time Estimate (minutes)
+            </label>
             <Input
+              id="task-estimate"
               type="number"
-              {...register("estimate", { valueAsNumber: true })}
+              {...register("estimate")}
               placeholder="e.g. 60"
               className="mt-1"
               min={0}
+              max={100000}
             />
           </div>
 
@@ -351,6 +467,120 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none h-4 w-4 text-muted-foreground/70" />
             </div>
+          </div>
+
+          {/* Subtasks */}
+          <div>
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium flex items-center gap-1.5">
+                <ListChecks className="h-4 w-4" />
+                Subtasks
+                {totalSubtasks > 0 && (
+                  <span className="text-xs text-muted-foreground font-normal">
+                    ({completedSubtasks}/{totalSubtasks})
+                  </span>
+                )}
+              </label>
+            </div>
+            {totalSubtasks > 0 && (
+              <div className="mt-2 h-1 w-full bg-muted rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${subtaskProgress}%` }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="h-full bg-primary rounded-full"
+                />
+              </div>
+            )}
+            <div className="mt-2 space-y-1">
+              <AnimatePresence initial={false}>
+                {subtasks.map((subtask) => (
+                  <motion.div
+                    key={subtask.id}
+                    layout
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="flex items-center gap-2 rounded-md border bg-card/50 px-2 py-1.5 group"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={subtask.completed}
+                      onChange={() => handleToggleSubtask(subtask.id)}
+                      className="h-4 w-4 rounded border-2 cursor-pointer accent-primary"
+                    />
+                    {editingSubtaskId === subtask.id ? (
+                      <Input
+                        value={editingSubtaskTitle}
+                        onChange={(e) => setEditingSubtaskTitle(e.target.value)}
+                        onBlur={() => saveSubtaskEdit(subtask.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            saveSubtaskEdit(subtask.id);
+                          } else if (e.key === "Escape") {
+                            setEditingSubtaskId(null);
+                          }
+                        }}
+                        autoFocus
+                        className="h-7 text-sm flex-1"
+                      />
+                    ) : (
+                      <span
+                        onClick={() => startEditSubtask(subtask)}
+                        className={cn(
+                          "flex-1 text-sm cursor-text rounded px-1 py-0.5 -mx-1 hover:bg-accent/40 transition-colors",
+                          subtask.completed && "line-through text-muted-foreground"
+                        )}
+                      >
+                        {subtask.title}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteSubtask(subtask.id)}
+                      className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-destructive/10 text-destructive transition-all"
+                      aria-label={`Delete subtask ${subtask.title}`}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+            {canManageSubtasks ? (
+              <div className="mt-2 flex gap-2">
+                <Input
+                  ref={newSubtaskRef}
+                  value={newSubtaskTitle}
+                  onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddSubtask();
+                    }
+                  }}
+                  placeholder="Add a subtask..."
+                  className="flex-1"
+                  maxLength={200}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handleAddSubtask()}
+                  disabled={!newSubtaskTitle.trim() || subtaskBusy}
+                  aria-label="Add subtask"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <p className="mt-2 text-xs text-muted-foreground italic">
+                Save the task first, then add subtasks.
+              </p>
+            )}
           </div>
 
           {/* Attachments */}

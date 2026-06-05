@@ -156,9 +156,11 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
       }
     }},
     { key: "?", action: () => setIsShortcutsOpen((prev) => !prev) },
-    { key: "/", action: () => {
-      const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
-      searchInput?.focus();
+    { key: "h", ctrl: true, action: () => setShowCompleted((prev) => !prev) },
+    { key: "d", action: () => {
+      if (selectedTaskIds.size > 0) {
+        handleBulkDelete();
+      }
     }},
     { key: "a", ctrl: true, action: () => {
       const allIds = filteredTasksRef.current.map(t => t.id);
@@ -442,10 +444,15 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
                   )}
                 </div>
               </div>
-              <Button onClick={() => setIsTaskFormOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                New Task
-              </Button>
+              <div className="flex items-center gap-2">
+                <kbd className="hidden sm:inline-flex h-6 items-center gap-1 rounded border border-border/50 bg-muted/80 px-1.5 text-[10px] text-muted-foreground font-medium">
+                  <span>⌘N</span>
+                </kbd>
+                <Button onClick={() => setIsTaskFormOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Task
+                </Button>
+              </div>
             </div>
 
             {/* Search and View Toggle */}

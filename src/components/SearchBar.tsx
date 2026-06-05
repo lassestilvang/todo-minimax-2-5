@@ -52,7 +52,11 @@ export function SearchBar({ tasks, onSelectTask }: SearchBarProps) {
 
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "/" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
+      const target = e.target as HTMLElement;
+      if (
+        e.key === "/" &&
+        !(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement || target.isContentEditable)
+      ) {
         e.preventDefault();
         inputRef.current?.focus();
       }

@@ -14,6 +14,7 @@ const SHORTCUT_GROUPS = [
     title: "General Actions",
     shortcuts: [
       { keys: ["Ctrl", "N"], description: "Create a new task" },
+      { keys: ["Ctrl", "H"], description: "Toggle show/hide completed tasks" },
       { keys: ["Esc"], description: "Close modals or clear selection" },
     ],
   },
@@ -21,6 +22,7 @@ const SHORTCUT_GROUPS = [
     title: "Bulk Actions",
     shortcuts: [
       { keys: ["Ctrl", "A"], description: "Select all visible tasks" },
+      { keys: ["D"], description: "Delete selected tasks" },
     ],
   },
   {
