@@ -31,6 +31,7 @@
   --color-border: #e7e5e4;
   --color-input: #e7e5e4;
   --color-ring: #a8a29e;
+  --color-primary-rgb: 28 25 23;
 
   --radius: 0.625rem;
 }
@@ -63,6 +64,7 @@
   --color-border: #27272a;
   --color-input: #27272a;
   --color-ring: #52525b;
+  --color-primary-rgb: 250 250 249;
 }
 
 * {
@@ -185,72 +187,6 @@ body.dark {
     var(--color-muted) 100%
   );
   background-size: 200% 100%;
-}
-
-/* Priority colors */
-.priority-high {
-  color: #ef4444;
-}
-
-.priority-medium {
-  color: #f59e0b;
-}
-
-.priority-low {
-  color: #22c55e;
-}
-
-.priority-none {
-  color: #6b7280;
-}
-
-.priority-high-bg {
-  background-color: #ef4444;
-}
-
-.priority-medium-bg {
-  background-color: #f59e0b;
-}
-
-.priority-low-bg {
-  background-color: #22c55e;
-}
-
-/* Enhanced TaskCard animations */
-.task-card-enter {
-  opacity: 0;
-  transform: translateY(20px) scale(0.95);
-}
-
-.task-card-enter-active {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-.task-card-exit {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-}
-
-.task-card-exit-active {
-  opacity: 0;
-  transform: translateY(-20px) scale(0.95);
-  transition: all 0.2s ease-in;
-}
-
-/* Subtle glow on hover for cards */
-.task-card-glow {
-  box-shadow: 0 0 0 1px rgba(var(--color-primary-rgb, 0, 0, 0), 0.05);
-  transition: box-shadow 0.2s ease;
-}
-
-.task-card-glow:hover {
-  box-shadow: 0 0 0 1px rgba(var(--color-primary-rgb, 0, 0, 0), 0.1), 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.dark .task-card-glow:hover {
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 /* Overdue badge */
