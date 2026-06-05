@@ -1,7 +1,7 @@
 "use client";
 
 /* eslint-disable react/display-name */
-import React, { useState, memo, useMemo } from "react";
+import React, { useState, memo, useCallback } from "react";
 import { format } from "date-fns";
 import { Download, Trash2, File, Image as ImageIcon, FileText, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,8 +28,8 @@ function AttachmentListComponent({
     null
   );
 
-  const getFileIcon = useMemo(
-    () => (mimeType: string) => {
+  const getFileIcon = useCallback(
+    (mimeType: string) => {
       if (mimeType.startsWith("image/")) {
         return <ImageIcon className="h-5 w-5 text-blue-500" />;
       }
@@ -41,8 +41,8 @@ function AttachmentListComponent({
     []
   );
 
-  const formatFileSize = useMemo(
-    () => (bytes: number): string => {
+  const formatFileSize = useCallback(
+    (bytes: number): string => {
       if (bytes < 1024) return `${bytes} B`;
       if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
       return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
@@ -50,12 +50,17 @@ function AttachmentListComponent({
 []
   );
 
-  const handleDownload = useMemo(
-    () => (attachment: Attachment) => {
-      const link = document.createElement("a");
-      link.href = `/api/attachments/${attachment.id}/download`;
-      link.download = attachment.filename;
-      link.click();
+  const handleDownload = useCallback(
+    (attachment: Attachment) => {
+      const mime = attachment.mimeType;
+      if (mime.startsWith("image/") || mime === "application/pdf") {
+        window.open(`/api/attachments/${attachment.id}/download`, "_blank");
+      } else {
+        const link = document.createElement("a");
+        link.href = `/api/attachments/${attachment.id}/download`;
+        link.download = attachment.filename;
+        link.click();
+      }
       onDownload?.(attachment.id);
     },
     [onDownload]
