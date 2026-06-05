@@ -15,6 +15,9 @@ export async function createList(data: ListFormData) {
   if (!name) {
     throw new Error("List name is required");
   }
+  if (name.length > 50) {
+    throw new Error("List name must be 50 characters or fewer");
+  }
   const list = await prisma.list.create({
     data: {
       name,
@@ -115,6 +118,9 @@ export async function createLabel(data: LabelFormData) {
   if (!name) {
     throw new Error("Label name is required");
   }
+  if (name.length > 30) {
+    throw new Error("Label name must be 30 characters or fewer");
+  }
   const label = await prisma.label.create({
     data: {
       name,
@@ -165,6 +171,9 @@ export async function createTask(data: TaskFormData) {
   const title = data.title?.trim();
   if (!title) {
     throw new Error("Task title is required");
+  }
+  if (title.length > 200) {
+    throw new Error("Task title must be 200 characters or fewer");
   }
 
   const task = await prisma.task.create({
@@ -591,11 +600,32 @@ export async function uploadAttachment(
   return attachment;
 }
 
+const ALLOWED_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "image/svg+xml",
+  "application/pdf",
+  "text/plain",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+];
+
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+
 export async function uploadAttachments(taskId: string, formData: FormData) {
   const files = formData.getAll("files") as File[];
   const results = [];
 
   for (const file of files) {
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      throw new Error(`File "${file.name}" exceeds the 10MB size limit`);
+    }
+    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+      throw new Error(`File type "${file.type}" is not supported`);
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer());
     const ext = path.extname(file.name);
     const filename = `${uuidv4()}${ext}`;

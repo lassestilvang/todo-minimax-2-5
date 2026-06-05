@@ -32,8 +32,8 @@ import { useToast } from "@/components/ui/toast";
 import type { Task, List, Label, RecurringType, Subtask, TaskFormData } from "@/types";
 
 const taskSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
+  title: z.string().min(1, "Title is required").max(200, "Title must be 200 characters or fewer"),
+  description: z.string().max(5000).optional(),
   dueDate: z.date().optional(),
   deadline: z.date().optional(),
   reminder: z.date().optional(),
@@ -296,6 +296,7 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
               placeholder="Task title"
               autoComplete="off"
               autoFocus
+              maxLength={200}
               className={cn("mt-1", errors.title && "border-destructive")}
             />
             {errors.title && (

@@ -63,6 +63,7 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
+  const [focusedTaskIndex, setFocusedTaskIndex] = useState(-1);
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
     title: string;
@@ -189,6 +190,22 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
       const allIds = filteredTasksRef.current.map(t => t.id);
       setSelectedTaskIds(new Set(allIds));
     }},
+    { key: "j", action: () => {
+      const max = filteredTasksRef.current.length - 1;
+      setFocusedTaskIndex((prev) => prev < max ? prev + 1 : 0);
+    }},
+    { key: "k", action: () => {
+      const max = filteredTasksRef.current.length - 1;
+      setFocusedTaskIndex((prev) => prev > 0 ? prev - 1 : max);
+    }},
+    { key: " ", shift: false, action: () => {
+      if (focusedTaskIndex >= 0 && focusedTaskIndex < filteredTasksRef.current.length) {
+        const task = filteredTasksRef.current[focusedTaskIndex];
+        if (!task.completed) {
+          handleToggleComplete(task.id);
+        }
+      }
+    }},
   ]);
 
   // Get current list
@@ -211,6 +228,11 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
   React.useEffect(() => {
     filteredTasksRef.current = filteredTasks;
   }, [filteredTasks]);
+
+  // Clamp focusedTaskIndex when filtered tasks change
+  React.useEffect(() => {
+    setFocusedTaskIndex((prev) => Math.min(prev, filteredTasks.length - 1));
+  }, [filteredTasks.length]);
 
   // Group tasks
   const groupedTasks = useMemo(() => {

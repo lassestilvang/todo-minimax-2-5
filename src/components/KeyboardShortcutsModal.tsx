@@ -19,17 +19,20 @@ const SHORTCUT_GROUPS = [
     ],
   },
   {
+    title: "Navigation",
+    shortcuts: [
+      { keys: ["J"], description: "Move to next task" },
+      { keys: ["K"], description: "Move to previous task" },
+      { keys: ["Space"], description: "Toggle complete focused task" },
+      { keys: ["/"], description: "Focus search bar globally" },
+      { keys: ["?"], description: "Toggle this keyboard shortcuts helper" },
+    ],
+  },
+  {
     title: "Bulk Actions",
     shortcuts: [
       { keys: ["Ctrl", "A"], description: "Select all visible tasks" },
       { keys: ["D"], description: "Delete selected tasks" },
-    ],
-  },
-  {
-    title: "Navigation & Search",
-    shortcuts: [
-      { keys: ["/"], description: "Focus search bar globally" },
-      { keys: ["?"], description: "Toggle this keyboard shortcuts helper" },
     ],
   },
 ];
