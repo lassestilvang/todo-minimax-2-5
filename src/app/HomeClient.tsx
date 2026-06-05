@@ -397,6 +397,24 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
         if (updated) {
           setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
         }
+        if (updated.completed) {
+          showToast("Task completed", "success", {
+            label: "Undo",
+            onClick: () => {
+              startTransition(async () => {
+                addOptimisticTaskAction({ type: "toggle", payload: { id } });
+                try {
+                  const reverted = await toggleTaskComplete(id);
+                  if (reverted) {
+                    setTasks((prev) => prev.map((t) => (t.id === reverted.id ? reverted : t)));
+                  }
+                } catch {
+                  showToast("Failed to undo completion");
+                }
+              });
+            },
+          });
+        }
       } catch {
         showToast("Failed to toggle task");
       }
