@@ -106,10 +106,11 @@ function TaskCardComponent({
       )}
 
       <div className={cn("flex items-start gap-3 p-4", priorityColor && "pl-5")}>
-        {/* Selection Checkbox */}
+        {/* Selection Checkbox - always visible on mobile, hover on desktop */}
         <div className={cn(
           "mt-0.5 flex-shrink-0 transition-all duration-200",
-          (isHovered || isSelected) ? "w-5 opacity-100" : "w-0 opacity-0 overflow-hidden"
+          "max-md:w-5 max-md:opacity-60",
+          (isHovered || isSelected) ? "md:w-5 md:opacity-100" : "md:w-0 md:opacity-0 md:overflow-hidden"
         )}>
           <Checkbox
             checked={isSelected}
