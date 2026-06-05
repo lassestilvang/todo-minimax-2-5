@@ -41,7 +41,7 @@ function TaskGroupComponent({
         </span>
       </div>
       <div className="space-y-2">
-        <AnimatePresence mode="popLayout">
+        <AnimatePresence>
           {tasks.map((task, index) => (
             <motion.div
               key={task.id}

@@ -214,10 +214,10 @@ function TaskCardComponent({
                     transition={{ type: "spring", stiffness: 400, damping: 25 }}
                     className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium transition-transform duration-150 hover:scale-105"
                     style={{
-                      backgroundColor: label.color ? `${label.color}18` : undefined,
-                      color: label.color || undefined,
+                      backgroundColor: label.color ? `${label.color}18` : "color-mix(in srgb, var(--color-muted-foreground) 15%, transparent)",
+                      color: label.color || "var(--color-muted-foreground)",
                       borderWidth: 1,
-                      borderColor: label.color ? `${label.color}40` : undefined,
+                      borderColor: label.color ? `${label.color}40` : "color-mix(in srgb, var(--color-muted-foreground) 30%, transparent)",
                     }}
                   >
                     {label.emoji} {label.name}
@@ -326,8 +326,8 @@ function TaskCardComponent({
         <motion.div
           initial={false}
           animate={{
-            opacity: isHovered ? 1 : 0,
-            scale: isHovered ? 1 : 0.9,
+            opacity: isHovered ? 1 : 0.6,
+            scale: isHovered ? 1 : 1,
           }}
           transition={{ duration: 0.15 }}
           className="flex items-center gap-0.5"

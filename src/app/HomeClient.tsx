@@ -13,6 +13,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { ViewToggle } from "@/components/ViewToggle";
 import { EmptyState } from "@/components/EmptyState";
 import { QuickAddBar } from "@/components/QuickAddBar";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { ActiveTimersIndicator } from "@/components/active-timers";
 import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
 import { Button } from "@/components/ui/button";
@@ -48,14 +49,27 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
   const searchParams = useSearchParams();
   const { showToast } = useToast();
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
-  const [lists] = useState<List[]>(initialLists);
-  const [labels] = useState<Label[]>(initialLabels);
+  const [lists, setLists] = useState<List[]>(initialLists);
+  const [labels, setLabels] = useState<Label[]>(initialLabels);
   const [, startTransition] = useTransition();
+
+  // Sync lists/labels when initial props change (e.g., after router.refresh())
+  React.useEffect(() => {
+    setLists(initialLists);
+    setLabels(initialLabels);
+  }, [initialLists, initialLabels]);
   const [showCompleted, setShowCompleted] = useState(true);
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    confirmLabel: string;
+    onConfirm: () => void;
+  }>({ isOpen: false, title: "", description: "", confirmLabel: "", onConfirm: () => {} });
 
   // Get URL params first so they're available to handlers below
   const currentView = (searchParams.get("view") as ViewType) || "all";
@@ -131,18 +145,25 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
     const ids = Array.from(selectedTaskIds);
     if (ids.length === 0) return;
 
-    if (!confirm(`Are you sure you want to delete ${ids.length} tasks?`)) return;
+    setConfirmDialog({
+      isOpen: true,
+      title: `Delete ${ids.length} tasks?`,
+      description: `This will permanently delete ${ids.length} task${ids.length !== 1 ? "s" : ""} and all associated subtasks, time logs, and attachments. This action cannot be undone.`,
+      confirmLabel: `Delete ${ids.length} task${ids.length !== 1 ? "s" : ""}`,
+      onConfirm: () => {
+        setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
+        startTransition(async () => {
+          ids.forEach((id) => addOptimisticTaskAction({ type: "delete", payload: { id } }));
 
-    startTransition(async () => {
-      ids.forEach((id) => addOptimisticTaskAction({ type: "delete", payload: { id } }));
-
-      try {
-        await Promise.all(ids.map((id) => deleteTask(id)));
-        setTasks((prev) => prev.filter((t) => !ids.includes(t.id)));
-        setSelectedTaskIds(new Set());
-      } catch {
-        showToast("Failed to delete some tasks");
-      }
+          try {
+            await Promise.all(ids.map((id) => deleteTask(id)));
+            setTasks((prev) => prev.filter((t) => !ids.includes(t.id)));
+            setSelectedTaskIds(new Set());
+          } catch {
+            showToast("Failed to delete some tasks");
+          }
+        });
+      },
     });
   }, [selectedTaskIds, addOptimisticTaskAction, showToast]);
 
@@ -343,15 +364,23 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
   const handleClearCompleted = useCallback(() => {
     const doneCount = optimisticTasks.filter((t) => t.completed).length;
     if (doneCount === 0) return;
-    if (!confirm(`Clear all ${doneCount} completed task${doneCount !== 1 ? "s" : ""}?`)) return;
 
-    startTransition(async () => {
-      try {
-        await clearCompletedTasks();
-        setTasks((prev) => prev.filter((t) => !t.completed));
-      } catch {
-        showToast("Failed to clear completed tasks");
-      }
+    setConfirmDialog({
+      isOpen: true,
+      title: `Clear ${doneCount} completed task${doneCount !== 1 ? "s" : ""}?`,
+      description: `This will permanently delete ${doneCount} completed task${doneCount !== 1 ? "s" : ""} and all associated attachments. This action cannot be undone.`,
+      confirmLabel: `Clear ${doneCount} task${doneCount !== 1 ? "s" : ""}`,
+      onConfirm: () => {
+        setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
+        startTransition(async () => {
+          try {
+            await clearCompletedTasks();
+            setTasks((prev) => prev.filter((t) => !t.completed));
+          } catch {
+            showToast("Failed to clear completed tasks");
+          }
+        });
+      },
     });
   }, [optimisticTasks, showToast]);
 
@@ -627,6 +656,17 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
       <KeyboardShortcutsModal
         isOpen={isShortcutsOpen}
         onClose={() => setIsShortcutsOpen(false)}
+      />
+
+      {/* Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog((prev) => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        description={confirmDialog.description}
+        confirmLabel={confirmDialog.confirmLabel}
+        confirmVariant="destructive"
       />
 
       {/* Floating Active Timers Widget */}
