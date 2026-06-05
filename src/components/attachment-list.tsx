@@ -1,6 +1,5 @@
 "use client";
 
-/* eslint-disable react/display-name */
 import React, { useState, memo, useCallback } from "react";
 import { format } from "date-fns";
 import { Download, Trash2, File, Image as ImageIcon, FileText, X } from "lucide-react";
