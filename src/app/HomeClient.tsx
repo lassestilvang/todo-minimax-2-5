@@ -258,7 +258,7 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
 
   // Handlers
   const handleCreateTask = useCallback((data: TaskFormData) => {
-    const tempId = `temp-${Date.now()}`;
+    const tempId = `temp-${crypto.randomUUID()}`;
     const optimisticTask: Task = {
       id: tempId,
       title: data.title,

@@ -104,12 +104,13 @@ function SidebarComponent({
           TaskFlow
         </motion.h1>
         <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleTheme}
-            className="h-9 w-9 transition-transform duration-200 hover:rotate-12"
-          >
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleTheme}
+          className="h-9 w-9 transition-transform duration-200 hover:rotate-12"
+          aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+        >
             <motion.div
               initial={false}
               animate={{ rotate: theme === "dark" ? 0 : 180 }}
@@ -400,6 +401,7 @@ function SidebarComponent({
         size="icon"
         className="fixed top-4 left-4 z-50 md:hidden h-10 w-10 bg-background/80 backdrop-blur-sm border border-border shadow-sm"
         onClick={() => setIsOpen(true)}
+        aria-label="Open navigation menu"
       >
         <Menu className="h-5 w-5" />
       </Button>

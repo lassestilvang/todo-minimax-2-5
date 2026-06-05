@@ -7,7 +7,7 @@ import type { ListFormData, LabelFormData, TaskFormData } from "@/types";
 import { writeFile, mkdir, unlink } from "fs/promises";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
-import { addDays, addWeeks, addMonths, addYears } from "date-fns";
+import { addDays, addWeeks, addMonths, addYears, startOfDay } from "date-fns";
 
 // List Actions
 export async function createList(data: ListFormData) {
@@ -276,12 +276,15 @@ export async function toggleTaskComplete(id: string) {
       // CUSTOM could be implemented later if needed
     }
 
-    // Create next instance of the task
+    // Create next instance of the task, preserving ALL original fields
     await prisma.task.create({
       data: {
         title: task.title,
         description: task.description,
         dueDate: nextDueDate,
+        deadline: task.deadline,
+        reminder: task.reminder,
+        estimate: task.estimate,
         priority: task.priority,
         recurringType: task.recurringType,
         recurringCustom: task.recurringCustom,
@@ -313,8 +316,8 @@ export async function deleteTask(id: string) {
 export async function getTasks(view?: string, listId?: string, labelId?: string, cursor?: string, limit = 50) {
   try {
     const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const today = startOfDay(now);
+    const nextWeek = addDays(today, 7);
 
     const where: Prisma.TaskWhereInput = {};
 

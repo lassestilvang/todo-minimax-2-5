@@ -18,14 +18,12 @@ const views: { id: ViewType; label: string }[] = [
 
 function ViewToggleComponent({ currentView }: ViewToggleProps) {
   return (
-    <div className="flex items-center gap-1 rounded-lg bg-muted p-1" role="tablist" aria-label="View filters">
+    <div className="flex items-center gap-1 rounded-lg bg-muted p-1" role="group" aria-label="View filters">
       {views.map((view) => (
         <Link
           key={view.id}
           href={`/?view=${view.id}`}
-          role="tab"
-          aria-selected={currentView === view.id}
-          aria-controls="task-list"
+          aria-current={currentView === view.id ? "page" : undefined}
           className={cn(
             "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
             currentView === view.id

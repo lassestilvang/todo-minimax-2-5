@@ -112,13 +112,20 @@ const DialogContent = React.forwardRef<
   const [mounted, setMounted] = React.useState(false);
   const focusTrapRef = useFocusTrap(mounted);
   const containerRef = React.useRef<HTMLDivElement>(null);
+  const previousFocusRef = React.useRef<HTMLElement | null>(null);
 
   React.useEffect(() => {
+    previousFocusRef.current = document.activeElement as HTMLElement;
     setMounted(true);
-    const firstFocusable = containerRef.current?.querySelector<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    );
-    firstFocusable?.focus();
+    requestAnimationFrame(() => {
+      const firstFocusable = containerRef.current?.querySelector<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      firstFocusable?.focus();
+    });
+    return () => {
+      previousFocusRef.current?.focus();
+    };
   }, []);
 
   const combinedRef = React.useCallback((el: HTMLDivElement | null) => {
@@ -128,18 +135,28 @@ const DialogContent = React.forwardRef<
     else if (ref) ref.current = el;
   }, [ref, focusTrapRef]);
 
+  const titleId = React.useId();
+
   return (
     <DialogPortal>
       <DialogOverlay />
       <div
         ref={combinedRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
         className={cn(
           "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 sm:rounded-lg",
           className
         )}
         {...props}
       >
-        {children}
+        {React.Children.map(children, (child) => {
+          if (React.isValidElement(child) && child.type === DialogTitle) {
+            return React.cloneElement(child, { id: titleId } as React.HTMLAttributes<HTMLHeadingElement>);
+          }
+          return child;
+        })}
         {onClose && (
           <button
             onClick={onClose}
