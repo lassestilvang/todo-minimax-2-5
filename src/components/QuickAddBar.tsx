@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from "react";
 import { Plus, Calendar, Flag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -14,14 +14,19 @@ interface QuickAddBarProps {
   onSubmit: (data: TaskFormData) => void;
 }
 
+export interface QuickAddBarHandle {
+  open: () => void;
+}
+
 const QUICK_DATES = [
   { label: "Today", days: 0 },
   { label: "Tomorrow", days: 1 },
   { label: "Next Week", days: 7 },
 ];
 
-export function QuickAddBar({ lists, onSubmit }: QuickAddBarProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+export const QuickAddBar = forwardRef<QuickAddBarHandle, QuickAddBarProps>(
+  function QuickAddBar({ lists, onSubmit }, ref) {
+    const [isExpanded, setIsExpanded] = useState(false);
   const [title, setTitle] = useState("");
   const [selectedPriority, setSelectedPriority] = useState<Priority>("NONE");
   const [selectedListId, setSelectedListId] = useState<string>("");
@@ -33,6 +38,12 @@ export function QuickAddBar({ lists, onSubmit }: QuickAddBarProps) {
       inputRef.current?.focus();
     }
   }, [isExpanded]);
+
+  useImperativeHandle(ref, () => ({
+    open() {
+      setIsExpanded(true);
+    },
+  }));
 
   const handleSubmit = useCallback((e?: React.FormEvent) => {
     e?.preventDefault();

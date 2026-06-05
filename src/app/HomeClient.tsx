@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition, useMemo, useCallback, useOptimistic } from "react";
+import React, { useState, useTransition, useMemo, useCallback, useOptimistic, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { Plus, Eye, EyeOff } from "lucide-react";
@@ -13,6 +13,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { ViewToggle } from "@/components/ViewToggle";
 import { EmptyState } from "@/components/EmptyState";
 import { QuickAddBar } from "@/components/QuickAddBar";
+import type { QuickAddBarHandle } from "@/components/QuickAddBar";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { ActiveTimersIndicator } from "@/components/active-timers";
 import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
@@ -71,6 +72,7 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
     confirmLabel: string;
     onConfirm: () => void;
   }>({ isOpen: false, title: "", description: "", confirmLabel: "", onConfirm: () => {} });
+  const quickAddRef = useRef<QuickAddBarHandle>(null);
 
   // Get URL params first so they're available to handlers below
   const currentView = (searchParams.get("view") as ViewType) || "all";
@@ -170,6 +172,7 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
 
   useKeyboardShortcuts([
     { key: "n", ctrl: true, action: () => setIsTaskFormOpen(true) },
+    { key: "q", ctrl: true, action: () => quickAddRef.current?.open() },
     { key: "Escape", action: () => {
       if (selectedTaskIds.size > 0) {
         handleClearSelection();
@@ -204,6 +207,12 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
         if (!task.completed) {
           handleToggleComplete(task.id);
         }
+      }
+    }},
+    { key: "e", action: () => {
+      if (focusedTaskIndex >= 0 && focusedTaskIndex < filteredTasksRef.current.length) {
+        const task = filteredTasksRef.current[focusedTaskIndex];
+        handleEditTask(task);
       }
     }},
   ]);
@@ -645,6 +654,7 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
           {/* Quick Add */}
           <div className="mt-3">
             <QuickAddBar
+              ref={quickAddRef}
               lists={lists}
               onSubmit={handleCreateTask}
             />

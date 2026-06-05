@@ -14,6 +14,7 @@ const SHORTCUT_GROUPS = [
     title: "General Actions",
     shortcuts: [
       { keys: ["Ctrl", "N"], description: "Create a new task" },
+      { keys: ["Ctrl", "Q"], description: "Quick add task from anywhere" },
       { keys: ["Ctrl", "H"], description: "Toggle show/hide completed tasks" },
       { keys: ["Esc"], description: "Close modals or clear selection" },
     ],
@@ -24,6 +25,7 @@ const SHORTCUT_GROUPS = [
       { keys: ["J"], description: "Move to next task" },
       { keys: ["K"], description: "Move to previous task" },
       { keys: ["Space"], description: "Toggle complete focused task" },
+      { keys: ["E"], description: "Edit focused task" },
       { keys: ["/"], description: "Focus search bar globally" },
       { keys: ["?"], description: "Toggle this keyboard shortcuts helper" },
     ],
