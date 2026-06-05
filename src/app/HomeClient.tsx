@@ -30,6 +30,7 @@ import {
   toggleSubtaskComplete,
   clearCompletedTasks,
   getTasks,
+  batchUpdateTasks,
 } from "./actions";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import {
@@ -169,6 +170,23 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
       },
     });
   }, [selectedTaskIds, addOptimisticTaskAction, showToast]);
+
+  const handleBatchUpdate = useCallback((data: { priority?: string; listId?: string | null }) => {
+    const ids = Array.from(selectedTaskIds);
+    if (ids.length === 0) return;
+
+    startTransition(async () => {
+      try {
+        await batchUpdateTasks(ids, data);
+        showToast(`Updated ${ids.length} tasks`, "success");
+        setSelectedTaskIds(new Set());
+        const result = await getTasks(currentView, currentListId, currentLabelId);
+        setTasks(Array.isArray(result) ? result : result.tasks);
+      } catch {
+        showToast("Failed to update tasks");
+      }
+    });
+  }, [selectedTaskIds, currentView, currentListId, currentLabelId, showToast]);
 
   useKeyboardShortcuts([
     { key: "n", ctrl: true, action: () => setIsTaskFormOpen(true) },
@@ -709,6 +727,8 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
         onClearSelection={handleClearSelection}
         onToggleComplete={handleBulkToggleComplete}
         onDelete={handleBulkDelete}
+        onBatchUpdate={handleBatchUpdate}
+        lists={lists}
       />
 
       {/* Task Form Modal */}

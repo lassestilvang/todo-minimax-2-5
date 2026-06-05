@@ -701,6 +701,37 @@ export async function clearCompletedTasks() {
   return ids;
 }
 
+// Batch update tasks (priority, list, labels)
+export async function batchUpdateTasks(ids: string[], data: { priority?: string; listId?: string | null; labelIds?: string[] }) {
+  const updateData: Record<string, unknown> = {};
+  if (data.priority !== undefined) updateData.priority = data.priority;
+  if (data.listId !== undefined) updateData.listId = data.listId || null;
+
+  if (data.labelIds !== undefined) {
+    // Replace all labels for each task
+    for (const id of ids) {
+      await prisma.task.update({
+        where: { id },
+        data: {
+          ...updateData,
+          labels: {
+            set: data.labelIds.map((labelId) => ({ id: labelId })),
+          },
+        },
+      });
+    }
+    revalidatePath("/");
+    return;
+  }
+
+  await prisma.task.updateMany({
+    where: { id: { in: ids } },
+    data: updateData,
+  });
+
+  revalidatePath("/");
+}
+
 // Search
 export async function searchTasks(query: string) {
   const trimmed = query.trim();
