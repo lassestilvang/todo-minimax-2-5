@@ -12,6 +12,7 @@ import { TaskForm } from "@/components/TaskForm";
 import { SearchBar } from "@/components/SearchBar";
 import { ViewToggle } from "@/components/ViewToggle";
 import { EmptyState } from "@/components/EmptyState";
+import { QuickAddBar } from "@/components/QuickAddBar";
 import { ActiveTimersIndicator } from "@/components/active-timers";
 import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
 import { Button } from "@/components/ui/button";
@@ -564,6 +565,14 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
                 />
               ))
             )}
+          </div>
+
+          {/* Quick Add */}
+          <div className="mt-3">
+            <QuickAddBar
+              lists={lists}
+              onSubmit={handleCreateTask}
+            />
           </div>
         </div>
       </main>
