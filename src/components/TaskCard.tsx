@@ -82,6 +82,7 @@ function TaskCardComponent({
       transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      data-task-id={task.id}
       className={cn(
         "group relative rounded-xl border transition-all duration-200",
         isHovered && !task.completed && "shadow-lg shadow-black/5 dark:shadow-black/20",

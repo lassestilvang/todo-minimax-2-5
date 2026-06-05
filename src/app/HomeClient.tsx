@@ -243,6 +243,17 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
     setFocusedTaskIndex((prev) => Math.min(prev, filteredTasks.length - 1));
   }, [filteredTasks.length]);
 
+  // Auto-scroll focused task into view
+  React.useEffect(() => {
+    const tasks = filteredTasksRef.current;
+    const task = tasks[focusedTaskIndex];
+    if (!task) return;
+    const el = document.querySelector(`[data-task-id="${task.id}"]`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [focusedTaskIndex]);
+
   // Group tasks
   const groupedTasks = useMemo(() => {
     const now = new Date();
