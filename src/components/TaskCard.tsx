@@ -244,28 +244,29 @@ function TaskCardComponent({
             )}
 
             {/* Time Tracking Badge */}
-            {(task.estimate || (task.actualTime && task.actualTime > 0)) && (
-              <motion.button
-                type="button"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setShowTimeDialog(true)}
-                className="inline-flex items-center gap-1.5 rounded-full bg-muted/80 dark:bg-muted/50 px-2.5 py-0.5 text-xs font-medium transition-colors duration-150 hover:bg-muted hover:dark:bg-muted/70"
-                aria-label="Track time"
-              >
-                <Timer className="h-3.5 w-3.5" />
-                {task.estimate && (
-                  <span>Est: {Math.floor(task.estimate / 60)}h {task.estimate % 60}m</span>
-                )}
-                {task.actualTime && task.actualTime > 0 && (
-                  <span className="text-green-600 dark:text-green-400">
-                    / {Math.floor(task.actualTime / 60)}h {task.actualTime % 60}m
-                  </span>
-                )}
-              </motion.button>
-            )}
+            <motion.button
+              type="button"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setShowTimeDialog(true)}
+              className="inline-flex items-center gap-1.5 rounded-full bg-muted/80 dark:bg-muted/50 px-2.5 py-0.5 text-xs font-medium transition-colors duration-150 hover:bg-muted hover:dark:bg-muted/70"
+              aria-label="Track time"
+            >
+              <Timer className="h-3.5 w-3.5" />
+              {task.estimate && (
+                <span>Est: {Math.floor(task.estimate / 60)}h {task.estimate % 60}m</span>
+              )}
+              {task.actualTime && task.actualTime > 0 && (
+                <span className="text-green-600 dark:text-green-400">
+                  / {Math.floor(task.actualTime / 60)}h {task.actualTime % 60}m
+                </span>
+              )}
+              {!task.estimate && (!task.actualTime || task.actualTime === 0) && (
+                <span className="text-muted-foreground/60">Track</span>
+              )}
+            </motion.button>
 
             {/* Attachments */}
             {task.attachments && task.attachments.length > 0 && (
