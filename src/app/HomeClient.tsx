@@ -509,16 +509,42 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
             )}
           </div>
 
+          {/* Stats Summary */}
+          {filteredTasks.length > 0 && (
+            <div className="flex items-center gap-4 mb-4 px-1 py-2 text-xs text-muted-foreground/70 border-b border-border/30">
+              <span className="font-medium text-foreground/80">
+                {totalFilteredCount} task{totalFilteredCount !== 1 ? "s" : ""}
+              </span>
+              {completedCount > 0 && (
+                <>
+                  <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                  <span className="text-green-600 dark:text-green-400">
+                    {completedCount} done
+                  </span>
+                </>
+              )}
+              {overdueCount > 0 && (
+                <>
+                  <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                  <span className="text-red-500 font-medium">
+                    {overdueCount} overdue
+                  </span>
+                </>
+              )}
+              <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+              <span>
+                {Math.round(completionPercentage)}% complete
+              </span>
+            </div>
+          )}
+
           {/* Task List */}
           <div className="space-y-2">
             {filteredTasks.length === 0 ? (
               <EmptyState
-                title="No tasks found"
-                description={
-                  currentView === "today"
-                    ? "You have no tasks due today. Enjoy your day!"
-                    : "Create your first task to get started"
-                }
+                viewType={currentView}
+                hasList={!!currentListId}
+                hasLabel={!!currentLabelId}
                 actionLabel="Create Task"
                 onAction={() => setIsTaskFormOpen(true)}
               />
