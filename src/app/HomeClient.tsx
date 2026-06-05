@@ -356,25 +356,45 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
   }, []);
 
   const handleToggleSubtask = useCallback((subtaskId: string) => {
-    // Optimistic toggle subtask
-    setTasks((prev) =>
-      prev.map((task) => {
+    // Find the parent task first so we can do a targeted update
+    let parentTaskId: string | undefined;
+    setTasks((prev) => {
+      for (const task of prev) {
+        if (task.subtasks?.some((st) => st.id === subtaskId)) {
+          parentTaskId = task.id;
+          break;
+        }
+      }
+      // Optimistic toggle
+      return prev.map((task) => {
+        if (task.id !== parentTaskId) return task;
         const subtasks = task.subtasks?.map((st) =>
           st.id === subtaskId ? { ...st, completed: !st.completed } : st
         );
         return { ...task, subtasks };
-      })
-    );
+      });
+    });
 
     startTransition(async () => {
       try {
-        await toggleSubtaskComplete(subtaskId);
-        const result = await getTasks(currentView, currentListId, currentLabelId);
-        setTasks(Array.isArray(result) ? result : result.tasks);
+        const updatedSubtask = await toggleSubtaskComplete(subtaskId);
+        if (updatedSubtask && parentTaskId) {
+          // Targeted update: only update the affected subtask in the parent task
+          setTasks((prev) =>
+            prev.map((task) => {
+              if (task.id !== parentTaskId) return task;
+              const subtasks = task.subtasks?.map((st) =>
+                st.id === subtaskId ? { ...st, completed: updatedSubtask.completed } : st
+              );
+              return { ...task, subtasks };
+            })
+          );
+        }
       } catch {
         // Revert toggle subtask on error
         setTasks((prev) =>
           prev.map((task) => {
+            if (task.id !== parentTaskId) return task;
             const subtasks = task.subtasks?.map((st) =>
               st.id === subtaskId ? { ...st, completed: !st.completed } : st
             );
@@ -384,7 +404,7 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
         showToast("Failed to toggle subtask");
       }
     });
-  }, [currentView, currentListId, currentLabelId, showToast]);
+  }, [showToast]);
 
   const handleSelectTaskFromSearch = useCallback((task: Task) => {
     setEditingTask(task);
