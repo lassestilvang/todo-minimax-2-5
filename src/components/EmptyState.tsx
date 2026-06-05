@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from "react";
+import React, { memo } from "react";
 import { Inbox, Sparkles, CalendarCheck, Timer } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -13,8 +13,6 @@ interface EmptyStateProps {
   hasLabel?: boolean;
 }
 
-const EMOJIS = ["🎯", "✨", "🚀", "💪", "🌟", "🎨", "🌈", "⭐", "🎪", "🌸"];
-
 function EmptyStateComponent({
   title,
   description,
@@ -24,7 +22,7 @@ function EmptyStateComponent({
   hasList,
   hasLabel,
 }: EmptyStateProps) {
-  const emoji = useMemo(() => EMOJIS[Math.floor(Math.random() * EMOJIS.length)], []);
+  const emoji = viewType === "today" ? "🌸" : viewType === "week" ? "🚀" : hasList ? "📋" : hasLabel ? "🏷️" : "🎯";
 
   const contextualTitle = title || (() => {
     if (viewType === "today") return "Nothing due today";

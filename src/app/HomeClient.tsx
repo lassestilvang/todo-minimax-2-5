@@ -195,7 +195,6 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
   const groupedTasks = useMemo(() => {
     const now = new Date();
     const today = startOfDay(now);
-    const tomorrow = addDays(today, 1);
     const inSevenDays = addDays(today, 7);
 
     const groups: Record<string, Task[]> = {
@@ -251,9 +250,10 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
 
   const totalFilteredCount = useMemo(() => filteredTasks.length, [filteredTasks]);
   const completionPercentage = useMemo(() => {
-    if (totalFilteredCount === 0) return 0;
+    const total = filteredTasks.length;
+    if (total === 0) return 0;
     const currentCompleted = filteredTasks.filter((t) => t.completed).length;
-    return (currentCompleted / totalFilteredCount) * 100;
+    return (currentCompleted / total) * 100;
   }, [filteredTasks]);
 
   // Handlers

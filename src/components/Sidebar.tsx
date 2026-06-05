@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, memo } from "react";
+import React, { useState, useEffect, useCallback, memo } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -52,35 +52,27 @@ function SidebarComponent({
     views: true,
     labels: true,
   });
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
-  const [mounted, setMounted] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    if (typeof document === "undefined") return "dark";
+    try {
+      const isDark = document.documentElement.classList.contains("dark");
+      return isDark ? "dark" : "light";
+    } catch {
+      return "dark";
+    }
+  });
   const [listManagerOpen, setListManagerOpen] = useState(false);
   const [labelManagerOpen, setLabelManagerOpen] = useState(false);
 
-  useEffect(() => {
-    let activeTheme: "light" | "dark" = "dark";
-    try {
-      const stored = localStorage.getItem("theme");
-      if (stored === "light" || stored === "dark") {
-        activeTheme = stored;
-      } else {
-        const isSystemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        activeTheme = isSystemDark ? "dark" : "light";
-      }
-    } catch {}
-
-    setTheme(activeTheme);
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
-    document.documentElement.classList.toggle("dark", theme === "dark");
-  }, [theme, mounted]);
+  const toggleTheme = useCallback(() => {
+    const newTheme = theme === "dark" ? "light" : "dark";
+    setTheme(newTheme);
+    document.documentElement.classList.toggle("dark", newTheme === "dark");
+    localStorage.setItem("theme", newTheme);
+  }, [theme]);
 
   // Listen for system theme changes when no explicit theme is set
   useEffect(() => {
-    if (!mounted) return;
     const stored = localStorage.getItem("theme");
     if (stored) return;
 
@@ -88,20 +80,17 @@ function SidebarComponent({
     const handler = (e: MediaQueryListEvent) => {
       const newTheme = e.matches ? "dark" : "light";
       setTheme(newTheme);
+      document.documentElement.classList.toggle("dark", newTheme === "dark");
     };
     mq.addEventListener("change", handler);
     return () => mq.removeEventListener("change", handler);
-  }, [mounted]);
+  }, []);
 
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
 
-  const toggleTheme = () => {
-    const newTheme = theme === "dark" ? "light" : "dark";
-    setTheme(newTheme);
-    localStorage.setItem("theme", newTheme);
-  };
+
 
   const sidebarContent = (
     <div className="flex flex-col h-full bg-card dark:bg-[#141415] border-r border-border dark:border-zinc-800/50">
@@ -115,26 +104,24 @@ function SidebarComponent({
           TaskFlow
         </motion.h1>
         <div className="flex items-center gap-1">
-          {mounted && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              className="h-9 w-9 transition-transform duration-200 hover:rotate-12"
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            className="h-9 w-9 transition-transform duration-200 hover:rotate-12"
+          >
+            <motion.div
+              initial={false}
+              animate={{ rotate: theme === "dark" ? 0 : 180 }}
+              transition={{ duration: 0.3 }}
             >
-              <motion.div
-                initial={false}
-                animate={{ rotate: theme === "dark" ? 0 : 180 }}
-                transition={{ duration: 0.3 }}
-              >
-                {theme === "dark" ? (
-                  <Sun className="h-5 w-5" />
-                ) : (
-                  <Moon className="h-5 w-5" />
-                )}
-              </motion.div>
-            </Button>
-          )}
+              {theme === "dark" ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </motion.div>
+          </Button>
           <Button
             variant="ghost"
             size="icon"

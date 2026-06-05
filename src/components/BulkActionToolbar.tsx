@@ -1,10 +1,9 @@
 "use client";
 
 import React from "react";
-import { Check, Trash2, X, Archive } from "lucide-react";
+import { Check, Trash2, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 
 interface BulkActionToolbarProps {
   selectedCount: number;
