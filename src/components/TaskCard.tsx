@@ -279,10 +279,10 @@ function TaskCardComponent({
 
             {/* Subtasks */}
             {totalSubtasks > 0 && (
-              <span className="inline-flex items-center gap-1.5">
+              <div className="inline-flex items-center gap-1.5">
                 <Check className="h-3.5 w-3.5" />
                 {completedSubtasks}/{totalSubtasks}
-              </span>
+              </div>
             )}
           </div>
 
@@ -321,6 +321,28 @@ function TaskCardComponent({
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Subtask progress bar */}
+          {totalSubtasks > 0 && (
+            <div className="mt-2.5 flex items-center gap-2">
+              <div className="flex-1 h-1 rounded-full bg-muted/50 dark:bg-muted/20 overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(completedSubtasks / totalSubtasks) * 100}%` }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className={cn(
+                    "h-full rounded-full",
+                    completedSubtasks === totalSubtasks
+                      ? "bg-green-500"
+                      : "bg-primary/60"
+                  )}
+                />
+              </div>
+              <span className="text-[10px] font-medium text-muted-foreground/60 tabular-nums">
+                {Math.round((completedSubtasks / totalSubtasks) * 100)}%
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Actions */}
