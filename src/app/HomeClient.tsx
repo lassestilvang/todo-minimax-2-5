@@ -431,7 +431,19 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
       addOptimisticTaskAction({ type: "delete", payload: { id } });
       try {
         await deleteTask(id);
-        setTasks((prev) => prev.filter((t) => t.id !== id));
+        setTasks((prev) => {
+          const next = prev.filter((t) => t.id !== id);
+          // Restore focus: try same index, or previous
+          const idx = prev.findIndex((t) => t.id === id);
+          const nextIdx = idx < next.length ? idx : next.length - 1;
+          const nextTask = next[nextIdx];
+          if (nextTask) {
+            requestAnimationFrame(() => {
+              document.querySelector(`[data-task-id="${nextTask.id}"]`)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            });
+          }
+          return next;
+        });
       } catch {
         showToast("Failed to delete task");
       }
