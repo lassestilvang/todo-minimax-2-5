@@ -59,24 +59,39 @@ function SidebarComponent({
 
   useEffect(() => {
     let activeTheme: "light" | "dark" = "dark";
-    const stored = localStorage.getItem("theme");
-    if (stored === "light" || stored === "dark") {
-      activeTheme = stored;
-    } else {
-      const isSystemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      activeTheme = isSystemDark ? "dark" : "light";
-    }
+    try {
+      const stored = localStorage.getItem("theme");
+      if (stored === "light" || stored === "dark") {
+        activeTheme = stored;
+      } else {
+        const isSystemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        activeTheme = isSystemDark ? "dark" : "light";
+      }
+    } catch {}
 
-    setTimeout(() => {
-      setTheme(activeTheme);
-      setMounted(true);
-    }, 0);
+    setTheme(activeTheme);
+    setMounted(true);
   }, []);
 
   useEffect(() => {
     if (!mounted) return;
     document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme, mounted]);
+
+  // Listen for system theme changes when no explicit theme is set
+  useEffect(() => {
+    if (!mounted) return;
+    const stored = localStorage.getItem("theme");
+    if (stored) return;
+
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const handler = (e: MediaQueryListEvent) => {
+      const newTheme = e.matches ? "dark" : "light";
+      setTheme(newTheme);
+    };
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, [mounted]);
 
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
