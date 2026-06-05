@@ -9,14 +9,20 @@ function generateToastId() {
   return `toast-${++toastId}-${Date.now()}`;
 }
 
+interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
 interface Toast {
   id: string;
   message: string;
   type: "error" | "success" | "info";
+  action?: ToastAction;
 }
 
 interface ToastContextType {
-  showToast: (message: string, type?: Toast["type"]) => void;
+  showToast: (message: string, type?: Toast["type"], action?: ToastAction) => void;
 }
 
 const ToastContext = createContext<ToastContextType | null>(null);
@@ -32,9 +38,9 @@ export function useToast() {
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const showToast = useCallback((message: string, type: Toast["type"] = "error") => {
+  const showToast = useCallback((message: string, type: Toast["type"] = "error", action?: ToastAction) => {
     const id = generateToastId();
-    setToasts((prev) => [...prev, { id, message, type }]);
+    setToasts((prev) => [...prev, { id, message, type, action }]);
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 5000);
@@ -66,9 +72,20 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           >
             {toast.type === "error" && <AlertCircle className="h-4 w-4" />}
             <p className="text-sm font-medium">{toast.message}</p>
+            {toast.action && (
+              <button
+                onClick={() => {
+                  toast.action!.onClick();
+                  removeToast(toast.id);
+                }}
+                className="ml-1 text-xs font-semibold uppercase tracking-wider underline underline-offset-2 hover:opacity-80 whitespace-nowrap"
+              >
+                {toast.action.label}
+              </button>
+            )}
             <button
               onClick={() => removeToast(toast.id)}
-              className="ml-2 hover:opacity-70"
+              className="ml-auto hover:opacity-70"
               aria-label="Dismiss notification"
             >
               <X className="h-4 w-4" />
