@@ -8,6 +8,7 @@ import { useTimer } from "@/hooks/use-timer";
 
 interface TimeTrackerProps {
   taskId: string;
+  taskTitle?: string;
   userId: string;
   onTimerStop?: (elapsedSeconds: number) => void;
   className?: string;
@@ -16,12 +17,13 @@ interface TimeTrackerProps {
 
 export function TimeTracker({
   taskId,
+  taskTitle,
   userId,
   onTimerStop,
   className,
   compact = false,
 }: TimeTrackerProps) {
-  const { isRunning, formattedTime, start, stop, pause } = useTimer(taskId, userId);
+  const { isRunning, formattedTime, start, stop, pause } = useTimer(taskId, userId, taskTitle);
 
   const handleToggle = useCallback(() => {
     if (isRunning) {

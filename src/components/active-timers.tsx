@@ -83,14 +83,15 @@ interface TimerControlProps {
 function TimerControl({ timer, userId }: TimerControlProps) {
   const { isRunning, elapsed, start, stop, pause } = useTimer(
     timer.taskId,
-    userId
+    userId,
+    timer.taskTitle
   );
 
   return (
     <div className="flex items-center justify-between rounded-lg border p-3">
-      <div className="flex flex-col">
-        <span className="text-sm font-medium">
-          Task {timer.taskId.slice(0, 8)}...
+      <div className="flex flex-col flex-1 min-w-0 mr-2">
+        <span className="text-sm font-medium truncate">
+          {timer.taskTitle || `Task ${timer.taskId.slice(0, 8)}...`}
         </span>
         <span className="text-xs text-muted-foreground font-mono">
           {formatDurationShort(elapsed)}

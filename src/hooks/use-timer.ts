@@ -23,7 +23,7 @@ export function useActiveTimersStore() {
   return useSyncExternalStore(subscribeToTimers, getActiveTimers, getServerSnapshot);
 }
 
-export function useTimer(taskId: string, userId: string) {
+export function useTimer(taskId: string, userId: string, taskTitle?: string) {
   const timers = useActiveTimersStore();
 
   const isRunning = timers.some((t) => t.taskId === taskId);
@@ -38,13 +38,14 @@ export function useTimer(taskId: string, userId: string) {
     } else {
       const newTimer: TimerData = {
         taskId,
+        taskTitle,
         userId,
         startTime: Date.now(),
         elapsed: 0,
       };
       addActiveTimer(newTimer);
     }
-  }, [taskId, userId]);
+  }, [taskId, userId, taskTitle]);
 
   const stop = useCallback((): number => {
     const timers = getActiveTimers();

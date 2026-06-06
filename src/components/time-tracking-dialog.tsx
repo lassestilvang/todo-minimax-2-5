@@ -24,6 +24,7 @@ import type { TimeLog } from "@/types";
 
 interface TimeTrackingDialogProps {
   taskId: string;
+  taskTitle?: string;
   isOpen: boolean;
   onClose: () => void;
   userId: string;
@@ -31,6 +32,7 @@ interface TimeTrackingDialogProps {
 
 export function TimeTrackingDialog({
   taskId,
+  taskTitle,
   isOpen,
   onClose,
   userId,
@@ -107,6 +109,7 @@ export function TimeTrackingDialog({
             <h3 className="text-sm font-medium mb-3">Timer</h3>
             <TimeTracker
               taskId={taskId}
+              taskTitle={taskTitle}
               userId={userId}
               onTimerStop={handleTimerStop}
             />

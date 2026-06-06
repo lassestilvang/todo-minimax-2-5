@@ -7,6 +7,7 @@ let tickListenerCount = 0;
 
 export interface TimerData {
   taskId: string;
+  taskTitle?: string;
   userId: string;
   startTime: number;
   elapsed: number;

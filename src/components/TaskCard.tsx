@@ -447,6 +447,7 @@ function TaskCardComponent({
       {showTimeDialog && (
         <TimeTrackingDialog
           taskId={task.id}
+          taskTitle={task.title}
           isOpen={showTimeDialog}
           onClose={() => setShowTimeDialog(false)}
           userId={userId}
