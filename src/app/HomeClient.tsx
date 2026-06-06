@@ -483,12 +483,27 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
           setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
         }
         if (updated && updated.completed) {
+          // Individual task confetti
           confetti({
             particleCount: 100,
             spread: 70,
             origin: { y: 0.6 },
             colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
           });
+
+          // Check if everything in the current filtered view is now done
+          const remainingActive = filteredTasksRef.current.filter(t => t.id !== id && !t.completed).length;
+          if (remainingActive === 0 && filteredTasksRef.current.length > 0) {
+            setTimeout(() => {
+              confetti({
+                particleCount: 400,
+                spread: 160,
+                origin: { y: 0.6 },
+                colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ffffff']
+              });
+            }, 300);
+          }
+
           showToast("Task completed", "success", {
             label: "Undo",
             onClick: () => {
