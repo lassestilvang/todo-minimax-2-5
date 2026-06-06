@@ -80,8 +80,8 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
     },
   });
 
-  // Watch labelIds from form
-  const watchedLabelIds = useWatch({ control, name: "labelIds" }) ?? [];
+  const watchedLabelIdsRaw = useWatch({ control, name: "labelIds" });
+  const watchedLabelIds = React.useMemo(() => watchedLabelIdsRaw ?? [], [watchedLabelIdsRaw]);
   // Watch dueDate from form
   const watchedDueDate = useWatch({ control, name: "dueDate" });
   // Watch deadline from form
@@ -143,7 +143,7 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
         }
       }
     }
-  }, [task, reset, isOpen]);
+  }, [task, reset, isOpen, clearDraft, loadDraft]);
 
   // Auto-save draft for new tasks
   const DRAFT_KEY = "taskflow-task-draft";
@@ -200,7 +200,7 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
     if (!isOpen || task) return;
     const timer = setTimeout(saveDraft, 500);
     return () => clearTimeout(timer);
-  }, [isOpen, task, saveDraft]);
+  }, [isOpen, task, saveDraft, clearDraft]);
 
   const toggleLabel = (labelId: string) => {
     const current = watchedLabelIds || [];
@@ -240,7 +240,7 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
   const handleClose = useCallback(() => {
     clearDraft();
     onClose();
-  }, [onClose]);
+  }, [onClose, clearDraft]);
 
   const handleDueDateChange = (value: string) => {
     setValue("dueDate", value ? new Date(value) : undefined, { shouldValidate: false });

@@ -21,7 +21,7 @@ export function TimeTracker({
   className,
   compact = false,
 }: TimeTrackerProps) {
-  const { isRunning, formattedTime, start, stop, pause, resume } = useTimer(taskId, userId);
+  const { isRunning, formattedTime, start, stop, pause } = useTimer(taskId, userId);
 
   const handleToggle = useCallback(() => {
     if (isRunning) {
