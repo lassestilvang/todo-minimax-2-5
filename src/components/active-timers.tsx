@@ -64,7 +64,7 @@ interface TimerControlProps {
 }
 
 function TimerControl({ timer, userId }: TimerControlProps) {
-  const { isRunning, elapsed, start: startTimer, stop: stopTimer } = useTimer(
+  const { isRunning, elapsed, start, stop, pause } = useTimer(
     timer.taskId,
     userId
   );
@@ -82,30 +82,33 @@ function TimerControl({ timer, userId }: TimerControlProps) {
       <div className="flex gap-1">
         {isRunning ? (
           <Button
+            type="button"
             variant="outline"
             size="icon"
             className="h-8 w-8"
-            onClick={stopTimer}
-            title="Stop timer"
+            onClick={pause}
+            title="Pause"
           >
             <Pause className="h-4 w-4" />
           </Button>
         ) : (
           <Button
+            type="button"
             variant="outline"
             size="icon"
             className="h-8 w-8"
-            onClick={startTimer}
+            onClick={start}
             title="Resume"
           >
             <Play className="h-4 w-4" />
           </Button>
         )}
         <Button
+          type="button"
           variant="destructive"
           size="icon"
           className="h-8 w-8"
-          onClick={() => stopTimer()}
+          onClick={() => stop()}
           title="Stop and save"
         >
           <Square className="h-4 w-4" />

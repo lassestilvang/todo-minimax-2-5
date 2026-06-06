@@ -49,12 +49,12 @@ export function useTimer(taskId: string, userId: string) {
   const stop = useCallback((): number => {
     const timers = getActiveTimers();
     const timer = timers.find((t) => t.taskId === taskId);
-    if (!timer) return elapsed;
+    if (!timer) return 0;
 
     const finalElapsed = getElapsedSeconds(timer);
     removeActiveTimer(taskId);
     return finalElapsed;
-  }, [taskId, elapsed]);
+  }, [taskId]);
 
   const pause = useCallback(() => {
     const timers = getActiveTimers();

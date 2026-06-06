@@ -21,16 +21,15 @@ export function TimeTracker({
   className,
   compact = false,
 }: TimeTrackerProps) {
-  const { isRunning, formattedTime, start, stop } = useTimer(taskId, userId);
+  const { isRunning, formattedTime, start, stop, pause, resume } = useTimer(taskId, userId);
 
   const handleToggle = useCallback(() => {
     if (isRunning) {
-      const elapsed = stop();
-      onTimerStop?.(elapsed);
+      pause();
     } else {
       start();
     }
-  }, [isRunning, start, stop, onTimerStop]);
+  }, [isRunning, start, pause]);
 
   const handleStop = useCallback(() => {
     const elapsed = stop();
@@ -71,7 +70,7 @@ export function TimeTracker({
               type="button"
               variant="outline"
               size="sm"
-              onClick={stop}
+              onClick={pause}
               className="gap-1.5"
               aria-label="Pause timer"
             >
@@ -91,16 +90,30 @@ export function TimeTracker({
             </Button>
           </>
         ) : (
-          <Button
-            type="button"
-            size="sm"
-            onClick={handleToggle}
-            className="gap-1.5"
-            aria-label="Start timer"
-          >
-            <Play className="h-4 w-4" />
-            Start
-          </Button>
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleToggle}
+              className="gap-1.5"
+              aria-label="Resume timer"
+            >
+              <Play className="h-4 w-4" />
+              Resume
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleStop}
+              className="gap-1.5 text-muted-foreground"
+              aria-label="Discard and stop timer"
+            >
+              <Square className="h-4 w-4" />
+              Discard
+            </Button>
+          </>
         )}
       </div>
     </div>

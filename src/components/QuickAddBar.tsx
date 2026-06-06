@@ -209,4 +209,4 @@ export const QuickAddBar = forwardRef<QuickAddBarHandle, QuickAddBarProps>(
       </div>
     </motion.form>
   );
-}
+});

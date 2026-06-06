@@ -415,7 +415,7 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
         if (updated) {
           setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
         }
-        if (updated.completed) {
+        if (updated && updated.completed) {
           showToast("Task completed", "success", {
             label: "Undo",
             onClick: () => {
