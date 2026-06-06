@@ -35,11 +35,19 @@ export default function RootLayout({
                 try {
                   var theme = localStorage.getItem('theme');
                   var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  if (theme === 'light' || (!theme && !prefersDark)) {
-                    document.documentElement.classList.remove('dark');
-                  } else {
+                  var isDark = theme === 'dark' || (!theme && prefersDark);
+                  if (isDark) {
                     document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
                   }
+                  var meta = document.querySelector('meta[name="theme-color"]');
+                  if (!meta) {
+                    meta = document.createElement('meta');
+                    meta.name = 'theme-color';
+                    document.head.appendChild(meta);
+                  }
+                  meta.content = isDark ? '#141415' : '#ffffff';
                 } catch(e) {}
               })();
             `,
