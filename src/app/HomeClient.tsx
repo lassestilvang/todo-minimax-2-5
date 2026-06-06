@@ -337,6 +337,41 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
     return (currentCompleted / total) * 100;
   }, [filteredTasks]);
 
+  // Compute sidebar counts
+  const labelCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const task of optimisticTasks) {
+      if (!task.completed && task.labels) {
+        for (const label of task.labels) {
+          counts[label.id] = (counts[label.id] || 0) + 1;
+        }
+      }
+    }
+    return counts;
+  }, [optimisticTasks]);
+
+  const viewCounts = useMemo(() => {
+    const now = new Date();
+    const today = startOfDay(now);
+    const inSevenDays = addDays(today, 7);
+    const counts: Record<string, number> = { today: 0, week: 0, upcoming: 0, all: 0 };
+    for (const task of optimisticTasks) {
+      if (task.completed) continue;
+      counts.all++;
+      if (!task.dueDate) continue;
+      const due = new Date(task.dueDate);
+      if (isToday(due)) {
+        counts.today++;
+        counts.week++;
+      } else if (isTomorrow(due) || (due > today && due <= inSevenDays)) {
+        counts.week++;
+      } else if (due > inSevenDays) {
+        counts.upcoming++;
+      }
+    }
+    return counts;
+  }, [optimisticTasks]);
+
   // Handlers
   const handleCreateTask = useCallback((data: TaskFormData) => {
     const tempId = `temp-${crypto.randomUUID()}`;
@@ -572,6 +607,8 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
         lists={lists}
         labels={labels}
         overdueCount={overdueCount}
+        labelCounts={labelCounts}
+        viewCounts={viewCounts}
         currentListId={currentListId}
         currentLabelId={currentLabelId}
         currentView={currentView}

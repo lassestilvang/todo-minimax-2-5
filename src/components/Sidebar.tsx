@@ -33,6 +33,8 @@ interface SidebarProps {
   lists: List[];
   labels: Label[];
   overdueCount: number;
+  labelCounts?: Record<string, number>;
+  viewCounts?: Record<string, number>;
   currentListId?: string;
   currentLabelId?: string;
   currentView?: string;
@@ -42,6 +44,8 @@ function SidebarComponent({
   lists,
   labels,
   overdueCount,
+  labelCounts,
+  viewCounts,
   currentListId,
   currentLabelId,
   currentView = "all",
@@ -163,6 +167,7 @@ function SidebarComponent({
                 <div className="mt-1 space-y-0.5">
                   {VIEWS.map((view, index) => {
                     const isActive = currentView === view.id;
+                    const viewCount = viewCounts?.[view.id];
                     return (
                       <motion.div
                         key={view.id}
@@ -186,6 +191,11 @@ function SidebarComponent({
                             isActive && "scale-110"
                           )} />
                           <span>{view.label}</span>
+                          {viewCount !== undefined && !(view.id === "today" && overdueCount > 0) && (
+                            <span className="ml-auto text-[10px] text-muted-foreground/60 font-mono tabular-nums">
+                              {viewCount}
+                            </span>
+                          )}
                           {view.id === "today" && overdueCount > 0 && (
                             <motion.span
                               initial={{ scale: 0 }}
@@ -345,6 +355,7 @@ function SidebarComponent({
                   <div className="mt-1 space-y-0.5">
                     {labels.map((label, index) => {
                       const isActive = currentLabelId === label.id;
+                      const labelCount = labelCounts?.[label.id];
                       return (
                         <motion.div
                           key={label.id}
@@ -368,6 +379,11 @@ function SidebarComponent({
                             />
                             <span className="truncate">{label.emoji}</span>
                             <span className="truncate">{label.name}</span>
+                            {labelCount !== undefined && labelCount > 0 && (
+                              <span className="ml-auto text-[10px] text-muted-foreground/60 font-mono tabular-nums">
+                                {labelCount}
+                              </span>
+                            )}
                           </Link>
                         </motion.div>
                       );
