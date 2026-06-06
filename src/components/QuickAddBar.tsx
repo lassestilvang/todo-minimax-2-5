@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from "react";
-import { Plus, Calendar, Flag } from "lucide-react";
+import { Plus, Calendar, Flag, Inbox } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { PRIORITY_COLORS } from "@/types";
 import type { Priority, List, TaskFormData } from "@/types";
-import { format, addDays } from "date-fns";
+import { format, addDays, nextDay, getDay, startOfDay } from "date-fns";
 
 interface QuickAddBarProps {
   lists: List[];
@@ -24,9 +24,20 @@ const QUICK_DATES = [
   { label: "Next Week", days: 7 },
 ];
 
+const DAYS_MAP: Record<string, number> = {
+  mon: 1, monday: 1,
+  tue: 2, tuesday: 2,
+  wed: 3, wednesday: 3,
+  thu: 4, thursday: 4,
+  fri: 5, friday: 5,
+  sat: 6, saturday: 6,
+  sun: 0, sunday: 0,
+};
+
 export const QuickAddBar = forwardRef<QuickAddBarHandle, QuickAddBarProps>(
   function QuickAddBar({ lists, onSubmit }, ref) {
     const [isExpanded, setIsExpanded] = useState(false);
+  const [inputValue, setInputValue] = useState("");
   const [title, setTitle] = useState("");
   const [selectedPriority, setSelectedPriority] = useState<Priority>("NONE");
   const [selectedListId, setSelectedListId] = useState<string>("");
@@ -45,28 +56,85 @@ export const QuickAddBar = forwardRef<QuickAddBarHandle, QuickAddBarProps>(
     },
   }));
 
+  // NLP Parser
+  useEffect(() => {
+    let currentTitle = inputValue;
+    let priority: Priority = "NONE";
+    let dueDate: Date | null = null;
+    let listId: string = "";
+
+    // Parse Priority: !high, !medium, !low, !none or !h, !m, !l, !n
+    const priorityMatch = currentTitle.match(/!(high|medium|low|none|h|m|l|n)\b/i);
+    if (priorityMatch) {
+      const p = priorityMatch[1].toLowerCase();
+      if (p === "high" || p === "h") priority = "HIGH";
+      else if (p === "medium" || p === "m") priority = "MEDIUM";
+      else if (p === "low" || p === "l") priority = "LOW";
+      else if (p === "none" || p === "n") priority = "NONE";
+      currentTitle = currentTitle.replace(priorityMatch[0], "");
+    }
+
+    // Parse List: #listname (only if title starts with it or it's at the end)
+    const listMatch = currentTitle.match(/#(\w+)\b/i);
+    if (listMatch) {
+      const listName = listMatch[1].toLowerCase();
+      const matchedList = lists.find(l => l.name.toLowerCase().includes(listName));
+      if (matchedList) {
+        listId = matchedList.id;
+        currentTitle = currentTitle.replace(listMatch[0], "");
+      }
+    }
+
+    // Parse Dates
+    const today = startOfDay(new Date());
+    
+    // Today/Tomorrow
+    if (/\b(today)\b/i.test(currentTitle)) {
+      dueDate = today;
+      currentTitle = currentTitle.replace(/\b(today)\b/i, "");
+    } else if (/\b(tomorrow)\b/i.test(currentTitle)) {
+      dueDate = addDays(today, 1);
+      currentTitle = currentTitle.replace(/\b(tomorrow)\b/i, "");
+    } else if (/\b(next week)\b/i.test(currentTitle)) {
+      dueDate = addDays(today, 7);
+      currentTitle = currentTitle.replace(/\b(next week)\b/i, "");
+    } else {
+      // Days of week
+      for (const [dayStr, dayNum] of Object.entries(DAYS_MAP)) {
+        const regex = new RegExp(`\\b(${dayStr})\\b`, "i");
+        if (regex.test(currentTitle)) {
+          const targetDay = dayNum as any;
+          dueDate = nextDay(today, targetDay);
+          currentTitle = currentTitle.replace(regex, "");
+          break;
+        }
+      }
+    }
+
+    setTitle(currentTitle.trim());
+    setSelectedPriority(priority);
+    setSelectedListId(listId);
+    setSelectedDate(dueDate);
+  }, [inputValue, lists]);
+
   const handleSubmit = useCallback((e?: React.FormEvent) => {
     e?.preventDefault();
-    const trimmed = title.trim();
-    if (!trimmed) return;
+    const finalTitle = title.trim();
+    if (!finalTitle) return;
 
     onSubmit({
-      title: trimmed,
+      title: finalTitle,
       priority: selectedPriority,
       listId: selectedListId === "" ? undefined : selectedListId,
       dueDate: selectedDate || undefined,
     });
 
-    setTitle("");
-    setSelectedPriority("NONE");
-    setSelectedDate(null);
+    setInputValue("");
     setIsExpanded(false);
   }, [title, selectedPriority, selectedListId, selectedDate, onSubmit]);
 
   const handleCancel = useCallback(() => {
-    setTitle("");
-    setSelectedPriority("NONE");
-    setSelectedDate(null);
+    setInputValue("");
     setIsExpanded(false);
   }, []);
 
@@ -82,12 +150,17 @@ export const QuickAddBar = forwardRef<QuickAddBarHandle, QuickAddBarProps>(
         <span className="text-sm text-muted-foreground/50 group-hover:text-muted-foreground transition-colors">
           Quick add task...
         </span>
-        <kbd className="ml-auto hidden sm:inline-flex h-5 items-center rounded border border-border/50 bg-muted/50 px-1.5 text-[10px] text-muted-foreground/50 font-medium">
-          ↵
-        </kbd>
+        <div className="ml-auto hidden sm:flex items-center gap-1.5 opacity-40 group-hover:opacity-100 transition-opacity">
+          <span className="text-[10px] font-medium text-muted-foreground">Try "tomorrow !high #work"</span>
+          <kbd className="h-5 items-center rounded border border-border/50 bg-muted/50 px-1.5 text-[10px] text-muted-foreground font-medium">
+            ↵
+          </kbd>
+        </div>
       </motion.button>
     );
   }
+
+  const matchedList = lists.find(l => l.id === selectedListId);
 
   return (
     <motion.form
@@ -100,91 +173,72 @@ export const QuickAddBar = forwardRef<QuickAddBarHandle, QuickAddBarProps>(
       <div className="p-3">
         <Input
           ref={inputRef}
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Escape") {
               handleCancel();
             }
           }}
-          placeholder="What needs to be done?"
+          placeholder="What needs to be done? (e.g. Buy milk tomorrow !high)"
           className="border-0 bg-transparent px-0 h-auto text-base font-medium placeholder:text-muted-foreground/40 focus-visible:ring-0 focus-visible:ring-offset-0"
           maxLength={200}
         />
 
         <AnimatePresence>
-          {title && (
+          {inputValue && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               className="mt-3 flex flex-wrap items-center gap-2 pt-3 border-t border-border/50"
             >
-              {/* Priority */}
-              <div className="flex items-center gap-1">
-                {(["HIGH", "MEDIUM", "LOW", "NONE"] as Priority[]).map((p) => (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => setSelectedPriority(p)}
-                    className={cn(
-                      "px-2 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-md transition-all",
-                      selectedPriority === p
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground hover:bg-accent"
-                    )}
-                  >
-                    <Flag
-                      className="h-3 w-3"
-                      style={{ color: p !== "NONE" ? PRIORITY_COLORS[p] : undefined }}
-                    />
-                  </button>
-                ))}
+              {/* Parsed Priority */}
+              <div className={cn(
+                "flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors",
+                selectedPriority !== "NONE" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground/60"
+              )}>
+                <Flag
+                  className="h-3 w-3"
+                  style={{ color: selectedPriority !== "NONE" ? PRIORITY_COLORS[selectedPriority] : undefined }}
+                />
+                {selectedPriority === "NONE" ? "No Priority" : selectedPriority}
               </div>
 
-              {/* Due Date */}
-              <div className="flex items-center gap-1">
-                {QUICK_DATES.map((qd) => (
-                  <button
-                    key={qd.label}
-                    type="button"
-                    onClick={() => {
-                      const date = addDays(new Date(), qd.days);
-                      date.setHours(0, 0, 0, 0);
-                      setSelectedDate(
-                        selectedDate?.getTime() === date.getTime() ? null : date
-                      );
-                    }}
-                    className={cn(
-                      "px-2 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-md transition-all",
-                      selectedDate &&
-                        format(selectedDate, "yyyy-MM-dd") ===
-                          format(addDays(new Date(), qd.days), "yyyy-MM-dd")
-                        ? "bg-primary/10 text-primary"
-                        : "bg-muted text-muted-foreground hover:bg-accent"
-                    )}
-                  >
-                    <Calendar className="h-3 w-3 inline mr-1" />
-                    {qd.label}
-                  </button>
-                ))}
+              {/* Parsed Date */}
+              <div className={cn(
+                "flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors",
+                selectedDate ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground/60"
+              )}>
+                <Calendar className="h-3 w-3" />
+                {selectedDate ? format(selectedDate, "MMM d") : "No Date"}
               </div>
 
-              {/* List */}
-              {lists.length > 0 && (
-                <select
-                  value={selectedListId}
-                  onChange={(e) => setSelectedListId(e.target.value)}
-                  className="h-7 text-[10px] font-semibold uppercase tracking-wider rounded-md bg-muted text-muted-foreground border-0 px-2 cursor-pointer hover:bg-accent transition-colors"
-                >
-                  <option value="">Inbox</option>
-                  {lists.map((list) => (
-                    <option key={list.id} value={list.id}>
-                      {list.emoji} {list.name}
-                    </option>
-                  ))}
-                </select>
-              )}
+              {/* Parsed List */}
+              <div className={cn(
+                "flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors",
+                selectedListId ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground/60"
+              )}>
+                {matchedList ? (
+                  <>
+                    <span className="text-xs">{matchedList.emoji}</span>
+                    <span>{matchedList.name}</span>
+                  </>
+                ) : (
+                  <>
+                    <Inbox className="h-3 w-3" />
+                    <span>Inbox</span>
+                  </>
+                )}
+              </div>
+
+              {/* Parsed Title Preview */}
+              <div className="flex-1 min-w-[100px] mx-2">
+                <span className="text-[10px] text-muted-foreground/40 font-medium uppercase tracking-widest block mb-0.5">Title Preview</span>
+                <span className="text-sm font-medium text-foreground/70 truncate block">
+                  {title || "..."}
+                </span>
+              </div>
 
               {/* Actions */}
               <div className="ml-auto flex items-center gap-1">
@@ -198,9 +252,9 @@ export const QuickAddBar = forwardRef<QuickAddBarHandle, QuickAddBarProps>(
                 <button
                   type="submit"
                   disabled={!title.trim()}
-                  className="px-3 py-1 text-xs font-semibold rounded-md bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 transition-all"
+                  className="px-3 py-1 text-xs font-semibold rounded-md bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 transition-all shadow-sm"
                 >
-                  Add
+                  Add Task
                 </button>
               </div>
             </motion.div>
@@ -210,3 +264,4 @@ export const QuickAddBar = forwardRef<QuickAddBarHandle, QuickAddBarProps>(
     </motion.form>
   );
 });
+
