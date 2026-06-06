@@ -3,7 +3,7 @@
 import React, { useState, useTransition, useMemo, useCallback, useOptimistic, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
-import { Plus, Eye, EyeOff } from "lucide-react";
+import { Plus, Eye, EyeOff, Flag } from "lucide-react";
 
 import { Sidebar } from "@/components/Sidebar";
 import { TaskGroup } from "@/components/TaskGroup";
@@ -21,7 +21,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/components/ui/toast";
-import type { Task, List, Label, TaskFormData, ViewType } from "@/types";
+import { cn } from "@/lib/utils";
+import type { Task, List, Label, TaskFormData, ViewType, Priority } from "@/types";
+import { PRIORITY_COLORS } from "@/types";
 import {
   createTask,
   updateTask,
@@ -61,6 +63,7 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
     setLabels(initialLabels);
   }, [initialLists, initialLabels]);
   const [showCompleted, setShowCompleted] = useState(true);
+  const [priorityFilter, setPriorityFilter] = useState<Priority | null>(null);
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
@@ -240,13 +243,18 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
   // Get current label
   const currentLabel = labels.find((l) => l.id === currentLabelId);
 
-  // Filter tasks by completion status
+  // Filter tasks by completion status and priority
   const filteredTasks = useMemo(
-    () =>
-      showCompleted
+    () => {
+      let filtered = showCompleted
         ? optimisticTasks
-        : optimisticTasks.filter((t) => !t.completed),
-    [optimisticTasks, showCompleted]
+        : optimisticTasks.filter((t) => !t.completed);
+      if (priorityFilter) {
+        filtered = filtered.filter((t) => t.priority === priorityFilter);
+      }
+      return filtered;
+    },
+    [optimisticTasks, showCompleted, priorityFilter]
   );
 
   // Keep ref in sync with filtered tasks so the Ctrl+A shortcut can read
@@ -687,6 +695,39 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
                   Clear all
                 </button>
               </>
+            )}
+          </div>
+
+          {/* Priority filter */}
+          <div className="flex items-center gap-1.5 mb-4">
+            <span className="text-xs text-muted-foreground/60 font-semibold uppercase tracking-wider mr-1">Priority:</span>
+            {(["NONE", "LOW", "MEDIUM", "HIGH"] as const).map((p) => {
+              const isActive = priorityFilter === p;
+              return (
+                <button
+                  key={p}
+                  onClick={() => setPriorityFilter(isActive ? null : p)}
+                  className={cn(
+                    "inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-full transition-all",
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  )}
+                >
+                  {p !== "NONE" && (
+                    <Flag className="h-3 w-3" style={{ color: isActive ? undefined : PRIORITY_COLORS[p] }} />
+                  )}
+                  {p === "NONE" ? "Any" : p.toLowerCase()}
+                </button>
+              );
+            })}
+            {priorityFilter && (
+              <button
+                onClick={() => setPriorityFilter(null)}
+                className="text-xs text-muted-foreground/50 hover:text-foreground ml-1 transition-colors"
+              >
+                Clear
+              </button>
             )}
           </div>
 
