@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useTransition, useMemo, useCallback, useOptimistic, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { Plus, Eye, EyeOff, Flag } from "lucide-react";
 
@@ -51,6 +51,7 @@ interface HomeClientProps {
 
 export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeClientProps) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { showToast } = useToast();
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [lists, setLists] = useState<List[]>(initialLists);
@@ -236,6 +237,7 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
         handleEditTask(task);
       }
     }},
+    { key: "t", action: () => router.push("/?view=today") },
   ]);
 
   // Get current list

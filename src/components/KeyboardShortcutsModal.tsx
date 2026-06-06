@@ -26,6 +26,7 @@ const SHORTCUT_GROUPS = [
       { keys: ["K"], description: "Move to previous task" },
       { keys: ["Space"], description: "Toggle complete focused task" },
       { keys: ["E"], description: "Edit focused task" },
+      { keys: ["T"], description: "Go to Today view" },
       { keys: ["/"], description: "Focus search bar globally" },
       { keys: ["?"], description: "Toggle this keyboard shortcuts helper" },
     ],
