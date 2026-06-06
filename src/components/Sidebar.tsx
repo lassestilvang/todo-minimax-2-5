@@ -16,6 +16,7 @@ import {
   X,
   Inbox,
   Settings2,
+  Keyboard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -33,22 +34,26 @@ interface SidebarProps {
   lists: List[];
   labels: Label[];
   overdueCount: number;
+  doneTodayCount?: number;
   labelCounts?: Record<string, number>;
   viewCounts?: Record<string, number>;
   currentListId?: string;
   currentLabelId?: string;
   currentView?: string;
+  onOpenShortcuts?: () => void;
 }
 
 function SidebarComponent({
   lists,
   labels,
   overdueCount,
+  doneTodayCount = 0,
   labelCounts,
   viewCounts,
   currentListId,
   currentLabelId,
   currentView = "all",
+  onOpenShortcuts,
 }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
@@ -405,10 +410,37 @@ function SidebarComponent({
       </div>
 
       {/* Footer */}
-      <div className="p-4 border-t border-border dark:border-zinc-800/50">
-        <p className="text-xs text-muted-foreground/60 text-center font-medium">
-          TaskFlow © {new Date().getFullYear()}
-        </p>
+      <div className="p-4 border-t border-border dark:border-zinc-800/50 space-y-4">
+        {doneTodayCount > 0 && (
+          <div className="px-3 py-2 rounded-lg bg-green-500/5 border border-green-500/20">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-green-600 dark:text-green-400">Done today</span>
+              <span className="text-xs font-bold text-green-600 dark:text-green-400 font-mono">{doneTodayCount}</span>
+            </div>
+            <div className="h-1 w-full bg-green-500/10 rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.min((doneTodayCount / 5) * 100, 100)}%` }}
+                className="h-full bg-green-500"
+              />
+            </div>
+          </div>
+        )}
+        
+        <div className="flex items-center justify-between">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 text-xs text-muted-foreground hover:text-foreground"
+            onClick={onOpenShortcuts}
+          >
+            <Keyboard className="h-3.5 w-3.5 mr-2" />
+            Shortcuts
+          </Button>
+          <p className="text-[10px] text-muted-foreground/40 font-medium">
+            TaskFlow v1.0
+          </p>
+        </div>
       </div>
     </div>
   );

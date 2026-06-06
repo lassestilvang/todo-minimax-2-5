@@ -352,6 +352,15 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
     [optimisticTasks]
   );
 
+  // Get completed count today
+  const doneTodayCount = useMemo(
+    () =>
+      optimisticTasks.filter(
+        (t) => t.completed && t.updatedAt && isToday(new Date(t.updatedAt))
+      ).length,
+    [optimisticTasks]
+  );
+
   const totalFilteredCount = useMemo(() => filteredTasks.length, [filteredTasks]);
   const completionPercentage = useMemo(() => {
     const total = filteredTasks.length;
@@ -676,11 +685,13 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
         lists={lists}
         labels={labels}
         overdueCount={overdueCount}
+        doneTodayCount={doneTodayCount}
         labelCounts={labelCounts}
         viewCounts={viewCounts}
         currentListId={currentListId}
         currentLabelId={currentLabelId}
         currentView={currentView}
+        onOpenShortcuts={() => setIsShortcutsOpen(true)}
       />
 
       <main className="flex-1 overflow-y-auto">
