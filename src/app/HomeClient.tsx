@@ -24,6 +24,7 @@ import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import type { Task, List, Label, TaskFormData, ViewType, Priority } from "@/types";
 import { PRIORITY_COLORS } from "@/types";
+import confetti from "canvas-confetti";
 import {
   createTask,
   updateTask,
@@ -139,7 +140,18 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
       ids.forEach((id) => addOptimisticTaskAction({ type: "toggle", payload: { id } }));
 
       try {
-        await Promise.all(ids.map((id) => toggleTaskComplete(id)));
+        const results = await Promise.all(ids.map((id) => toggleTaskComplete(id)));
+        const completedCount = results.filter(r => r?.completed).length;
+        
+        if (completedCount > 0) {
+          confetti({
+            particleCount: 150,
+            spread: 80,
+            origin: { y: 0.7 },
+            colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+          });
+        }
+
         const result = await getTasks(currentView, currentListId, currentLabelId);
         setTasks(Array.isArray(result) ? result : result.tasks);
         setSelectedTaskIds(new Set());
@@ -461,6 +473,12 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
           setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
         }
         if (updated && updated.completed) {
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+          });
           showToast("Task completed", "success", {
             label: "Undo",
             onClick: () => {

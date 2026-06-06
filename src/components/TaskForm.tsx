@@ -106,6 +106,49 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
     }
   }, [task, isOpen]);
 
+  // Draft helpers — hoisted before useEffect that uses them
+  const DRAFT_KEY = "taskflow-task-draft";
+
+  const saveDraft = useCallback(() => {
+    if (task) return;
+    const draft = {
+      title: watchedTitle,
+      description: watchedDescription,
+      priority: watchedPriority,
+      listId: watchedListId,
+      labelIds: watchedLabelIds,
+      dueDate: watchedDueDate,
+      deadline: watchedDeadline,
+      reminder: watchedReminder,
+      estimate: watchedEstimate,
+      recurringType: watchedRecurringType,
+      recurringCustom: watchedRecurringCustom,
+    };
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    } catch { /* Storage full, silently fail */ }
+  }, [task, watchedTitle, watchedDescription, watchedPriority, watchedListId, watchedLabelIds, watchedDueDate, watchedDeadline, watchedReminder, watchedEstimate, watchedRecurringType, watchedRecurringCustom]);
+
+  const loadDraft = useCallback(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return null;
+      const data = JSON.parse(raw);
+      return {
+        ...data,
+        dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
+        deadline: data.deadline ? new Date(data.deadline) : undefined,
+        reminder: data.reminder ? new Date(data.reminder) : undefined,
+      };
+    } catch { return null; }
+  }, []);
+
+  const clearDraft = useCallback(() => {
+    try {
+      localStorage.removeItem(DRAFT_KEY);
+    } catch { /* Ignore */ }
+  }, []);
+
   // Reset form when task changes
   useEffect(() => {
     if (isOpen) {
@@ -145,57 +188,7 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
     }
   }, [task, reset, isOpen, clearDraft, loadDraft]);
 
-  // Auto-save draft for new tasks
-  const DRAFT_KEY = "taskflow-task-draft";
-  const watchedTitle = useWatch({ control, name: "title" });
-  const watchedDescription = useWatch({ control, name: "description" });
-  const watchedPriority = useWatch({ control, name: "priority" });
-  const watchedListId = useWatch({ control, name: "listId" });
-  const watchedEstimate = useWatch({ control, name: "estimate" });
-  const watchedRecurringType = useWatch({ control, name: "recurringType" });
-  const watchedRecurringCustom = useWatch({ control, name: "recurringCustom" });
-
-  const saveDraft = useCallback(() => {
-    if (task) return; // Don't save drafts for editing
-    const draft = {
-      title: watchedTitle,
-      description: watchedDescription,
-      priority: watchedPriority,
-      listId: watchedListId,
-      labelIds: watchedLabelIds,
-      dueDate: watchedDueDate,
-      deadline: watchedDeadline,
-      reminder: watchedReminder,
-      estimate: watchedEstimate,
-      recurringType: watchedRecurringType,
-      recurringCustom: watchedRecurringCustom,
-    };
-    try {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-    } catch { /* Storage full, silently fail */ }
-  }, [task, watchedTitle, watchedDescription, watchedPriority, watchedListId, watchedLabelIds, watchedDueDate, watchedDeadline, watchedReminder, watchedEstimate, watchedRecurringType, watchedRecurringCustom]);
-
-  const loadDraft = useCallback(() => {
-    try {
-      const raw = localStorage.getItem(DRAFT_KEY);
-      if (!raw) return null;
-      const data = JSON.parse(raw);
-      return {
-        ...data,
-        dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
-        deadline: data.deadline ? new Date(data.deadline) : undefined,
-        reminder: data.reminder ? new Date(data.reminder) : undefined,
-      };
-    } catch { return null; }
-  }, []);
-
-  const clearDraft = useCallback(() => {
-    try {
-      localStorage.removeItem(DRAFT_KEY);
-    } catch { /* Ignore */ }
-  }, []);
-
-  // Auto-save draft on field change (debounced via passive save)
+  // Auto-save draft for new tasks (debounced)
   useEffect(() => {
     if (!isOpen || task) return;
     const timer = setTimeout(saveDraft, 500);
