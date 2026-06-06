@@ -14,6 +14,7 @@ import {
   Timer,
   Loader2,
   Plus,
+  Maximize2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -61,6 +62,7 @@ interface TaskCardProps {
   onEdit: (task: Task) => void;
   onToggleSubtask?: (id: string) => void;
   onAddSubtask?: (taskId: string, title: string) => void;
+  onFocus?: (task: Task) => void;
   userId?: string;
   isLoading?: boolean;
   isSelected?: boolean;
@@ -74,6 +76,7 @@ function TaskCardComponent({
   onEdit,
   onToggleSubtask,
   onAddSubtask,
+  onFocus,
   userId = "default",
   isLoading,
   isSelected,
@@ -421,6 +424,15 @@ function TaskCardComponent({
             ) : (
               <ChevronDown className="h-4 w-4" />
             )}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors"
+            onClick={() => onFocus?.(task)}
+            aria-label="Enter focus mode"
+          >
+            <Maximize2 className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"

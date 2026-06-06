@@ -17,6 +17,7 @@ import type { QuickAddBarHandle } from "@/components/QuickAddBar";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { ActiveTimersIndicator } from "@/components/active-timers";
 import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
+import { FocusMode } from "@/components/FocusMode";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -69,6 +70,7 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
   const [priorityFilter, setPriorityFilter] = useState<Priority | null>(null);
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [focusTask, setFocusTask] = useState<Task | null>(null);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
   const [focusedTaskIndex, setFocusedTaskIndex] = useState(-1);
@@ -207,9 +209,16 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
 
   useKeyboardShortcuts([
     { key: "n", ctrl: true, action: () => setIsTaskFormOpen(true) },
+    { key: "f", ctrl: true, action: () => {
+      if (focusedTaskIndex >= 0 && focusedTaskIndex < filteredTasksRef.current.length) {
+        setFocusTask(filteredTasksRef.current[focusedTaskIndex]);
+      }
+    }},
     { key: "q", ctrl: true, action: () => quickAddRef.current?.open() },
     { key: "Escape", action: () => {
-      if (selectedTaskIds.size > 0) {
+      if (focusTask) {
+        setFocusTask(null);
+      } else if (selectedTaskIds.size > 0) {
         handleClearSelection();
       } else {
         setIsTaskFormOpen(false);
@@ -868,6 +877,7 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
                   onEdit={handleEditTask}
                   onToggleSubtask={handleToggleSubtask}
                   onAddSubtask={handleAddSubtask}
+                  onFocus={setFocusTask}
                   userId="default"
                   selectedTaskIds={selectedTaskIds}
                   onSelectTask={handleSelectTask}
@@ -930,7 +940,25 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
       />
 
       {/* Floating Active Timers Widget */}
-      <ActiveTimersIndicator userId="default" />
+      <ActiveTimersIndicator
+        userId="default"
+        onFocusTask={(taskId) => {
+          const task = tasks.find((t) => t.id === taskId);
+          if (task) setFocusTask(task);
+        }}
+      />
+
+      {/* Focus Mode Overlay */}
+      {focusTask && (
+        <FocusMode
+          task={focusTask}
+          isOpen={!!focusTask}
+          onClose={() => setFocusTask(null)}
+          onToggleComplete={handleToggleComplete}
+          onToggleSubtask={handleToggleSubtask}
+          userId="default"
+        />
+      )}
     </div>
   );
 }
