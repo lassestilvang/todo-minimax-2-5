@@ -122,22 +122,85 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
           deadline: task.deadline ? new Date(task.deadline) : undefined,
           reminder: task.reminder ? new Date(task.reminder) : undefined,
         });
+        clearDraft();
       } else {
-        reset({
-          title: "",
-          description: "",
-          priority: "NONE",
-          recurringType: undefined,
-          recurringCustom: "",
-          listId: "",
-          labelIds: [],
-          dueDate: undefined,
-          deadline: undefined,
-          reminder: undefined,
-        });
+        const draft = loadDraft();
+        if (draft) {
+          reset(draft);
+        } else {
+          reset({
+            title: "",
+            description: "",
+            priority: "NONE",
+            recurringType: undefined,
+            recurringCustom: "",
+            listId: "",
+            labelIds: [],
+            dueDate: undefined,
+            deadline: undefined,
+            reminder: undefined,
+          });
+        }
       }
     }
   }, [task, reset, isOpen]);
+
+  // Auto-save draft for new tasks
+  const DRAFT_KEY = "taskflow-task-draft";
+  const watchedTitle = useWatch({ control, name: "title" });
+  const watchedDescription = useWatch({ control, name: "description" });
+  const watchedPriority = useWatch({ control, name: "priority" });
+  const watchedListId = useWatch({ control, name: "listId" });
+  const watchedEstimate = useWatch({ control, name: "estimate" });
+  const watchedRecurringType = useWatch({ control, name: "recurringType" });
+  const watchedRecurringCustom = useWatch({ control, name: "recurringCustom" });
+
+  const saveDraft = useCallback(() => {
+    if (task) return; // Don't save drafts for editing
+    const draft = {
+      title: watchedTitle,
+      description: watchedDescription,
+      priority: watchedPriority,
+      listId: watchedListId,
+      labelIds: watchedLabelIds,
+      dueDate: watchedDueDate,
+      deadline: watchedDeadline,
+      reminder: watchedReminder,
+      estimate: watchedEstimate,
+      recurringType: watchedRecurringType,
+      recurringCustom: watchedRecurringCustom,
+    };
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    } catch { /* Storage full, silently fail */ }
+  }, [task, watchedTitle, watchedDescription, watchedPriority, watchedListId, watchedLabelIds, watchedDueDate, watchedDeadline, watchedReminder, watchedEstimate, watchedRecurringType, watchedRecurringCustom]);
+
+  const loadDraft = useCallback(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return null;
+      const data = JSON.parse(raw);
+      return {
+        ...data,
+        dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
+        deadline: data.deadline ? new Date(data.deadline) : undefined,
+        reminder: data.reminder ? new Date(data.reminder) : undefined,
+      };
+    } catch { return null; }
+  }, []);
+
+  const clearDraft = useCallback(() => {
+    try {
+      localStorage.removeItem(DRAFT_KEY);
+    } catch { /* Ignore */ }
+  }, []);
+
+  // Auto-save draft on field change (debounced via passive save)
+  useEffect(() => {
+    if (!isOpen || task) return;
+    const timer = setTimeout(saveDraft, 500);
+    return () => clearTimeout(timer);
+  }, [isOpen, task, saveDraft]);
 
   const toggleLabel = (labelId: string) => {
     const current = watchedLabelIds || [];
@@ -154,6 +217,7 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
       typeof data.estimate === "string" && data.estimate.trim() !== ""
         ? Number(data.estimate)
         : undefined;
+    clearDraft();
     onSubmit({
       ...data,
       estimate: Number.isFinite(estimateNum) ? estimateNum : undefined,
@@ -172,6 +236,11 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
       formRef.current?.requestSubmit();
     }
   }, []);
+
+  const handleClose = useCallback(() => {
+    clearDraft();
+    onClose();
+  }, [onClose]);
 
   const handleDueDateChange = (value: string) => {
     setValue("dueDate", value ? new Date(value) : undefined, { shouldValidate: false });
@@ -280,7 +349,7 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
     totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{task ? "Edit Task" : "New Task"}</DialogTitle>
@@ -647,7 +716,7 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
             <span className="text-[10px] text-muted-foreground/50 font-medium mr-auto hidden sm:inline">
               ⌘Enter to save
             </span>
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={handleClose}>
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
