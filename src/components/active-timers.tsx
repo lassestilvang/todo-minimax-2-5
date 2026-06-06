@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Play, Pause, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
+  getElapsedSeconds,
   formatDurationShort,
   type TimerData,
 } from "@/lib/timer-store";
@@ -16,6 +17,22 @@ interface ActiveTimersIndicatorProps {
 export function ActiveTimersIndicator({ userId }: ActiveTimersIndicatorProps) {
   const timers = useActiveTimersStore();
   const [isExpanded, setIsExpanded] = useState(false);
+  const originalTitle = useRef("");
+
+  useEffect(() => {
+    originalTitle.current = document.title;
+  }, []);
+
+  // Update page title with elapsed time when timers are active
+  useEffect(() => {
+    if (timers.length === 0) {
+      document.title = originalTitle.current;
+      return;
+    }
+
+    const totalElapsed = timers.reduce((sum, t) => sum + getElapsedSeconds(t), 0);
+    document.title = `[${formatDurationShort(totalElapsed)}] ${originalTitle.current}`;
+  }, [timers]);
 
   const totalActive = timers.length;
 
