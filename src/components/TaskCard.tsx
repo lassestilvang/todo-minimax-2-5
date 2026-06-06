@@ -31,6 +31,28 @@ function formatDueDate(date: Date) {
   return format(date, "MMM d");
 }
 
+function linkify(text: string): React.ReactNode {
+  const urlRegex = /(https?:\/\/[^\s<]+)/g;
+  const parts = text.split(urlRegex);
+  return parts.map((part, i) => {
+    if (part.startsWith("http://") || part.startsWith("https://")) {
+      return (
+        <a
+          key={i}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary underline underline-offset-2 hover:opacity-80 transition-opacity"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+}
+
 interface TaskCardProps {
   task: Task;
   onToggleComplete: (id: string) => void;
@@ -194,7 +216,7 @@ function TaskCardComponent({
                 transition={{ duration: 0.15 }}
                 className="mt-1.5 text-sm text-muted-foreground/80 line-clamp-2 leading-relaxed"
               >
-                {task.description}
+                {linkify(task.description)}
               </motion.p>
             )}
           </AnimatePresence>
