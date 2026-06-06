@@ -30,6 +30,7 @@ import {
   updateTask,
   deleteTask,
   toggleTaskComplete,
+  createSubtask,
   toggleSubtaskComplete,
   clearCompletedTasks,
   getTasks,
@@ -605,6 +606,46 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
     });
   }, [showToast]);
 
+  const handleAddSubtask = useCallback((taskId: string, title: string) => {
+    const tempId = `temp-${crypto.randomUUID()}`;
+    setTasks((prev) =>
+      prev.map((task) => {
+        if (task.id !== taskId) return task;
+        const subtasks = [
+          ...(task.subtasks || []),
+          { id: tempId, title, completed: false, taskId, createdAt: new Date() },
+        ];
+        return { ...task, subtasks };
+      })
+    );
+
+    startTransition(async () => {
+      try {
+        const newSubtask = await createSubtask(taskId, title);
+        if (newSubtask) {
+          setTasks((prev) =>
+            prev.map((task) => {
+              if (task.id !== taskId) return task;
+              const subtasks = task.subtasks?.map((st) =>
+                st.id === tempId ? newSubtask : st
+              );
+              return { ...task, subtasks };
+            })
+          );
+        }
+      } catch {
+        setTasks((prev) =>
+          prev.map((task) => {
+            if (task.id !== taskId) return task;
+            const subtasks = task.subtasks?.filter((st) => st.id !== tempId);
+            return { ...task, subtasks };
+          })
+        );
+        showToast("Failed to add subtask");
+      }
+    });
+  }, [showToast]);
+
   const handleSelectTaskFromSearch = useCallback((task: Task) => {
     setEditingTask(task);
     setIsTaskFormOpen(true);
@@ -800,6 +841,7 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
                   onDelete={handleDeleteTask}
                   onEdit={handleEditTask}
                   onToggleSubtask={handleToggleSubtask}
+                  onAddSubtask={handleAddSubtask}
                   userId="default"
                   selectedTaskIds={selectedTaskIds}
                   onSelectTask={handleSelectTask}

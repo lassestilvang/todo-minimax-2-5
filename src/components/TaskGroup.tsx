@@ -12,6 +12,7 @@ interface TaskGroupProps {
   onDelete: (id: string) => void;
   onEdit: (task: Task) => void;
   onToggleSubtask: (id: string) => void;
+  onAddSubtask?: (taskId: string, title: string) => void;
   userId?: string;
   selectedTaskIds?: Set<string>;
   onSelectTask?: (id: string) => void;
@@ -24,6 +25,7 @@ function TaskGroupComponent({
   onDelete,
   onEdit,
   onToggleSubtask,
+  onAddSubtask,
   userId = "default",
   selectedTaskIds,
   onSelectTask,
@@ -57,6 +59,7 @@ function TaskGroupComponent({
                 onDelete={onDelete}
                 onEdit={onEdit}
                 onToggleSubtask={onToggleSubtask}
+                onAddSubtask={onAddSubtask}
                 userId={userId}
                 isSelected={selectedTaskIds?.has(task.id)}
                 onSelect={onSelectTask}

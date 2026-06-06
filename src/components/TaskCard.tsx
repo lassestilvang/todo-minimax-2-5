@@ -13,6 +13,7 @@ import {
   Paperclip,
   Timer,
   Loader2,
+  Plus,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -59,6 +60,7 @@ interface TaskCardProps {
   onDelete: (id: string) => void;
   onEdit: (task: Task) => void;
   onToggleSubtask?: (id: string) => void;
+  onAddSubtask?: (taskId: string, title: string) => void;
   userId?: string;
   isLoading?: boolean;
   isSelected?: boolean;
@@ -71,6 +73,7 @@ function TaskCardComponent({
   onDelete,
   onEdit,
   onToggleSubtask,
+  onAddSubtask,
   userId = "default",
   isLoading,
   isSelected,
@@ -79,12 +82,21 @@ function TaskCardComponent({
   const [isExpanded, setIsExpanded] = useState(false);
   const [showTimeDialog, setShowTimeDialog] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
 
   const isOverdue = useMemo(() => {
     if (!task.dueDate || task.completed) return false;
     const dueDate = new Date(task.dueDate);
     return isPast(dueDate) && !isToday(dueDate);
   }, [task.dueDate, task.completed]);
+
+  const handleAddSubtask = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = newSubtaskTitle.trim();
+    if (!trimmed || !onAddSubtask) return;
+    onAddSubtask(task.id, trimmed);
+    setNewSubtaskTitle("");
+  };
 
   const completedSubtasks = useMemo(
     () => task.subtasks?.filter((s) => s.completed).length || 0,
@@ -311,7 +323,7 @@ function TaskCardComponent({
 
           {/* Expanded subtasks */}
           <AnimatePresence>
-            {isExpanded && totalSubtasks > 0 && (
+            {isExpanded && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
@@ -341,6 +353,25 @@ function TaskCardComponent({
                     </span>
                   </motion.div>
                 ))}
+
+                {/* Quick add subtask input */}
+                <form onSubmit={handleAddSubtask} className="flex items-center gap-2.5 py-1">
+                  <div className="w-4 h-4 rounded border border-dashed border-muted-foreground/30 flex items-center justify-center">
+                    <Plus className="h-2.5 w-2.5 text-muted-foreground/50" />
+                  </div>
+                  <input
+                    type="text"
+                    value={newSubtaskTitle}
+                    onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                    placeholder="Add a subtask..."
+                    className="flex-1 bg-transparent border-0 p-0 text-sm focus:ring-0 placeholder:text-muted-foreground/40 focus:placeholder:text-muted-foreground/20 transition-all outline-none"
+                  />
+                  {newSubtaskTitle.trim() && (
+                    <Button type="submit" variant="ghost" size="icon" className="h-6 w-6">
+                      <Check className="h-3 w-3" />
+                    </Button>
+                  )}
+                </form>
               </motion.div>
             )}
           </AnimatePresence>
