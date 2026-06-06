@@ -77,16 +77,6 @@ body, .bg-background, .bg-card, .bg-popover, .bg-muted, .bg-accent,
   transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-  }
-}
-
 body {
   background-color: var(--color-background);
   background-image:
