@@ -89,6 +89,14 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
   // Watch reminder from form
   const watchedReminder = useWatch({ control, name: "reminder" });
 
+  const watchedTitle = useWatch({ control, name: "title" });
+  const watchedDescription = useWatch({ control, name: "description" });
+  const watchedPriority = useWatch({ control, name: "priority" });
+  const watchedListId = useWatch({ control, name: "listId" });
+  const watchedEstimate = useWatch({ control, name: "estimate" });
+  const watchedRecurringType = useWatch({ control, name: "recurringType" });
+  const watchedRecurringCustom = useWatch({ control, name: "recurringCustom" });
+
   // Subtask editor local state
   const [subtasks, setSubtasks] = useState<Subtask[]>(task?.subtasks ?? []);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
