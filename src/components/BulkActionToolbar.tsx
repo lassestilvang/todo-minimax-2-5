@@ -1,19 +1,20 @@
 "use client";
 
 import React, { useState } from "react";
-import { Check, Trash2, X, Flag, List, ChevronDown } from "lucide-react";
+import { Check, Trash2, X, Flag, List, ChevronDown, Tag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { PRIORITY_COLORS } from "@/types";
-import type { Priority, List as ListType } from "@/types";
+import type { Priority, List as ListType, Label } from "@/types";
 
 interface BulkActionToolbarProps {
   selectedCount: number;
   onClearSelection: () => void;
   onToggleComplete: () => void;
   onDelete: () => void;
-  onBatchUpdate: (data: { priority?: string; listId?: string | null }) => void;
+  onBatchUpdate: (data: { priority?: string; listId?: string | null; labelIds?: string[] }) => void;
   lists: ListType[];
+  labels: Label[];
 }
 
 const PRIORITIES: Priority[] = ["HIGH", "MEDIUM", "LOW", "NONE"];
@@ -25,6 +26,7 @@ export function BulkActionToolbar({
   onDelete,
   onBatchUpdate,
   lists,
+  labels,
 }: BulkActionToolbarProps) {
   return (
     <AnimatePresence>
@@ -46,7 +48,7 @@ export function BulkActionToolbar({
             </Button>
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold whitespace-nowrap">
-                {selectedCount} tasks selected
+                {selectedCount} tasks
               </span>
             </div>
           </div>
@@ -54,6 +56,8 @@ export function BulkActionToolbar({
           <div className="flex items-center gap-2">
             <BatchPrioritySelect onSelect={(p) => onBatchUpdate({ priority: p })} />
             <BatchListSelect lists={lists} onSelect={(listId) => onBatchUpdate({ listId })} />
+            <BatchLabelSelect labels={labels} onSelect={(labelIds) => onBatchUpdate({ labelIds })} />
+            <div className="w-[1px] h-6 bg-border mx-1" />
             <Button
               variant="outline"
               size="sm"
@@ -61,7 +65,7 @@ export function BulkActionToolbar({
               onClick={onToggleComplete}
             >
               <Check className="h-4 w-4" />
-              Mark Done
+              Done
             </Button>
             <Button
               variant="outline"
@@ -76,6 +80,56 @@ export function BulkActionToolbar({
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+function BatchLabelSelect({ labels, onSelect }: { labels: Label[]; onSelect: (labelIds: string[]) => void }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-1.5 h-9 px-3 text-xs font-semibold uppercase tracking-wider rounded-lg bg-muted text-muted-foreground hover:bg-accent transition-colors"
+      >
+        <Tag className="h-3.5 w-3.5" />
+        Labels
+        <ChevronDown className="h-3 w-3" />
+      </button>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -4, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.95 }}
+            className="absolute bottom-full mb-2 left-0 min-w-[180px] rounded-xl border bg-popover dark:bg-[#1a1a1a] p-1.5 shadow-lg max-h-[300px] overflow-y-auto"
+          >
+            <button
+              onClick={() => {
+                onSelect([]);
+                setIsOpen(false);
+              }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-xs rounded-lg hover:bg-accent transition-colors text-left text-muted-foreground"
+            >
+              Remove all labels
+            </button>
+            {labels.map((label) => (
+              <button
+                key={label.id}
+                onClick={() => {
+                  onSelect([label.id]);
+                  setIsOpen(false);
+                }}
+                className="flex w-full items-center gap-2 px-3 py-2 text-xs rounded-lg hover:bg-accent transition-colors text-left"
+              >
+                <Tag className="h-3.5 w-3.5" style={{ color: label.color || undefined }} />
+                {label.emoji} {label.name}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 

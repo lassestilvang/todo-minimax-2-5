@@ -188,7 +188,7 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
     });
   }, [selectedTaskIds, addOptimisticTaskAction, showToast]);
 
-  const handleBatchUpdate = useCallback((data: { priority?: string; listId?: string | null }) => {
+  const handleBatchUpdate = useCallback((data: { priority?: string; listId?: string | null; labelIds?: string[] }) => {
     const ids = Array.from(selectedTaskIds);
     if (ids.length === 0) return;
 
@@ -895,6 +895,7 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
         onDelete={handleBulkDelete}
         onBatchUpdate={handleBatchUpdate}
         lists={lists}
+        labels={labels}
       />
 
       {/* Task Form Modal */}
