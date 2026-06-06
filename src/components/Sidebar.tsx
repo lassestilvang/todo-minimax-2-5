@@ -73,6 +73,10 @@ function SidebarComponent({
     setTheme(newTheme);
     document.documentElement.classList.toggle("dark", newTheme === "dark");
     localStorage.setItem("theme", newTheme);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute("content", newTheme === "dark" ? "#141415" : "#ffffff");
+    }
   }, [theme]);
 
   // Listen for system theme changes when no explicit theme is set
