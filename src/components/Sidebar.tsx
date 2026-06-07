@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { ListManagerDialog, LabelManagerDialog } from "@/components/ManagerDialogs";
+import { ListManagerDialog, LabelManagerDialog, SettingsManagerDialog } from "@/components/ManagerDialogs";
 import type { List, Label } from "@/types";
 
 const VIEWS = [
@@ -74,6 +74,7 @@ function SidebarComponent({
   });
   const [listManagerOpen, setListManagerOpen] = useState(false);
   const [labelManagerOpen, setLabelManagerOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const toggleTheme = useCallback(() => {
     const newTheme = theme === "dark" ? "light" : "dark";
@@ -442,6 +443,15 @@ function SidebarComponent({
             <Keyboard className="h-3.5 w-3.5 mr-2" />
             Shortcuts
           </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 text-xs text-muted-foreground hover:text-foreground"
+            onClick={() => setSettingsOpen(true)}
+          >
+            <Settings2 className="h-3.5 w-3.5 mr-2" />
+            Settings
+          </Button>
           <p className="text-[10px] text-muted-foreground/40 font-medium">
             TaskFlow v1.0
           </p>
@@ -510,6 +520,10 @@ function SidebarComponent({
         isOpen={labelManagerOpen}
         onClose={() => setLabelManagerOpen(false)}
         labels={labels}
+      />
+      <SettingsManagerDialog
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
       />
     </>
   );
