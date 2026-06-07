@@ -775,3 +775,13 @@ export async function getOverdueCount() {
   });
   return count;
 }
+
+export async function exportData() {
+  const [tasks, lists, labels] = await Promise.all([
+    prisma.task.findMany({ include: { labels: true, subtasks: true } }),
+    prisma.list.findMany(),
+    prisma.label.findMany(),
+  ]);
+
+  return { tasks, lists, labels, exportedAt: new Date().toISOString() };
+}
