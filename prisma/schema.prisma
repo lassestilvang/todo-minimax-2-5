@@ -37,6 +37,7 @@ model Task {
   attachmentUrl   String?
   listId          String?
   list            List?       @relation(fields: [listId], references: [id])
+  order           Int         @default(0)
   labels          Label[]     @relation("TaskLabels")
   subtasks        Subtask[]
   taskLogs        TaskLog[]

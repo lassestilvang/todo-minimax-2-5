@@ -367,6 +367,7 @@ export async function getTasks(view?: string, listId?: string, labelId?: string,
       where,
       orderBy: [
         { completed: "asc" },
+        { order: "asc" },
         { dueDate: "asc" },
         { priority: "desc" },
         { createdAt: "desc" },
@@ -729,6 +730,16 @@ export async function batchUpdateTasks(ids: string[], data: { priority?: string;
     data: updateData,
   });
 
+  revalidatePath("/");
+}
+
+export async function updateTaskOrder(order: { id: string; order: number }[]) {
+  for (const item of order) {
+    await prisma.task.update({
+      where: { id: item.id },
+      data: { order: item.order },
+    });
+  }
   revalidatePath("/");
 }
 

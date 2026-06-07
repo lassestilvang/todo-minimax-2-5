@@ -28,6 +28,7 @@ export interface Task {
   recurringCustom: string | null;
   attachmentUrl: string | null;
   listId: string | null;
+  order: number;
   createdAt: Date;
   updatedAt: Date;
   labels?: Label[];

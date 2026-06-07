@@ -36,6 +36,7 @@ import {
   clearCompletedTasks,
   getTasks,
   batchUpdateTasks,
+  updateTaskOrder,
 } from "./actions";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import {
@@ -206,6 +207,27 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
       }
     });
   }, [selectedTaskIds, currentView, currentListId, currentLabelId, showToast]);
+
+  const handleReorder = useCallback((reorderedTasks: Task[]) => {
+    setTasks((prev) => {
+      const newTasks = [...prev];
+      reorderedTasks.forEach((reorderedTask, index) => {
+        const taskIndex = newTasks.findIndex(t => t.id === reorderedTask.id);
+        if (taskIndex !== -1) {
+          newTasks[taskIndex] = { ...newTasks[taskIndex], order: index };
+        }
+      });
+      return newTasks.sort((a, b) => (a.order || 0) - (b.order || 0));
+    });
+
+    startTransition(async () => {
+      try {
+        await updateTaskOrder(reorderedTasks.map((t, index) => ({ id: t.id, order: index })));
+      } catch {
+        showToast("Failed to save reorder");
+      }
+    });
+  }, [showToast]);
 
   useKeyboardShortcuts([
     { key: "n", ctrl: true, action: () => setIsTaskFormOpen(true) },
@@ -431,6 +453,7 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
       recurringCustom: data.recurringCustom || null,
       attachmentUrl: null,
       listId: data.listId || null,
+      order: 0,
       createdAt: new Date(),
       updatedAt: new Date(),
       labels: data.labelIds ? labels.filter((l) => data.labelIds?.includes(l.id)) : [],
@@ -878,6 +901,7 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
                   onToggleSubtask={handleToggleSubtask}
                   onAddSubtask={handleAddSubtask}
                   onFocus={setFocusTask}
+                  onReorder={handleReorder}
                   userId="default"
                   selectedTaskIds={selectedTaskIds}
                   onSelectTask={handleSelectTask}
