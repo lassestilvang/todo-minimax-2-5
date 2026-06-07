@@ -153,6 +153,7 @@ function SidebarComponent({
         <div className="mb-4">
           <button
             onClick={() => toggleSection("views")}
+            aria-label={expandedSections.views ? "Collapse views" : "Expand views"}
             className="flex items-center justify-between w-full px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors duration-150"
           >
             <span>Views</span>
@@ -229,6 +230,7 @@ function SidebarComponent({
           <div className="flex items-center pr-1">
             <button
               onClick={() => toggleSection("lists")}
+              aria-label={expandedSections.lists ? "Collapse lists" : "Expand lists"}
               className="flex-1 flex items-center px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors duration-150"
             >
               <span>Lists</span>
@@ -330,6 +332,7 @@ function SidebarComponent({
           <div className="flex items-center pr-1">
             <button
               onClick={() => toggleSection("labels")}
+              aria-label={expandedSections.labels ? "Collapse labels" : "Expand labels"}
               className="flex-1 flex items-center px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors duration-150"
             >
               <span>Labels</span>
