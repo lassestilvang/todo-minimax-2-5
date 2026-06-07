@@ -14,6 +14,7 @@ import {
   Moon,
   Menu,
   X,
+  BarChart2,
   Inbox,
   Settings2,
   Keyboard,
@@ -28,6 +29,7 @@ const VIEWS = [
   { id: "week", label: "Next 7 Days", icon: Calendar, href: "/?view=week" },
   { id: "upcoming", label: "Upcoming", icon: Calendar, href: "/?view=upcoming" },
   { id: "all", label: "All Tasks", icon: ListTodo, href: "/?view=all" },
+  { id: "dashboard", label: "Dashboard", icon: BarChart2, href: "/dashboard" },
 ];
 
 interface SidebarProps {
