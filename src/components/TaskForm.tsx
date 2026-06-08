@@ -575,6 +575,13 @@ export function TaskForm({ isOpen, onClose, onSubmit, task, lists, labels, onTas
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none h-4 w-4 text-muted-foreground/70" />
             </div>
+            {watchedRecurringType === "CUSTOM" && (
+              <Input
+                {...register("recurringCustom")}
+                placeholder="e.g., 'every 2 weeks', 'each 3rd day'"
+                className="mt-2"
+              />
+            )}
           </div>
 
           {/* Subtasks */}

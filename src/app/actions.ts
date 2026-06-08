@@ -8,6 +8,7 @@ import { writeFile, mkdir, unlink } from "fs/promises";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import { addDays, addWeeks, addMonths, addYears, startOfDay } from "date-fns";
+import { getNextRecurrenceDate } from "@/lib/utils";
 
 // List Actions
 export async function createList(data: ListFormData) {
@@ -267,25 +268,42 @@ export async function toggleTaskComplete(id: string) {
 
   // Handle recurring tasks
   if (newCompletedState && task.recurringType && task.dueDate) {
-    let nextDueDate = new Date(task.dueDate);
-    
-    switch (task.recurringType) {
-      case "DAILY":
-        nextDueDate = addDays(nextDueDate, 1);
-        break;
-      case "WEEKLY":
-        nextDueDate = addWeeks(nextDueDate, 1);
-        break;
-      case "MONTHLY":
-        nextDueDate = addMonths(nextDueDate, 1);
-        break;
-      case "YEARLY":
-        nextDueDate = addYears(nextDueDate, 1);
-        break;
-      // CUSTOM could be implemented later if needed
+    const originalDueDate = new Date(task.dueDate);
+    let nextDueDate: Date;
+
+    if (task.recurringType === "CUSTOM") {
+      nextDueDate = getNextRecurrenceDate(
+        originalDueDate,
+        task.recurringType,
+        task.recurringCustom
+      );
+    } else {
+      switch (task.recurringType) {
+        case "DAILY":
+          nextDueDate = addDays(originalDueDate, 1);
+          break;
+        case "WEEKLY":
+          nextDueDate = addWeeks(originalDueDate, 1);
+          break;
+        case "MONTHLY":
+          nextDueDate = addMonths(originalDueDate, 1);
+          break;
+        case "YEARLY":
+          nextDueDate = addYears(originalDueDate, 1);
+          break;
+        default:
+          nextDueDate = addDays(originalDueDate, 1); // Fallback
+      }
     }
 
     // Create next instance of the task, preserving ALL original fields
+    // and setting a new 'order' based on the last known order for the task's list/view
+    const latestTaskInList = await prisma.task.findFirst({
+      where: { listId: task.listId, completed: false },
+      orderBy: { order: "desc" },
+    });
+    const newOrder = latestTaskInList ? latestTaskInList.order + 1 : 0;
+
     await prisma.task.create({
       data: {
         title: task.title,
@@ -298,6 +316,7 @@ export async function toggleTaskComplete(id: string) {
         recurringType: task.recurringType,
         recurringCustom: task.recurringCustom,
         listId: task.listId,
+        order: newOrder, // Assign the new order
         labels: {
           connect: task.labels.map((l) => ({ id: l.id })),
         },
