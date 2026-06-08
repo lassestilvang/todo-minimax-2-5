@@ -808,6 +808,36 @@ export async function acknowledgeReminder(taskId: string) {
   revalidatePath("/");
 }
 
+export async function duplicateTasks(ids: string[]) {
+  const tasks = await prisma.task.findMany({
+    where: { id: { in: ids } },
+    include: { labels: true, subtasks: true },
+  });
+
+  for (const task of tasks) {
+    await prisma.task.create({
+      data: {
+        title: `${task.title} (Copy)`,
+        description: task.description,
+        priority: task.priority,
+        listId: task.listId,
+        order: task.order + 1, // Basic order bump
+        labels: {
+          connect: task.labels.map((l) => ({ id: l.id })),
+        },
+        subtasks: {
+          create: task.subtasks.map((st) => ({
+            title: st.title,
+            completed: false,
+          })),
+        },
+      },
+    });
+  }
+
+  revalidatePath("/");
+}
+
 export async function exportData() {
   const [tasks, lists, labels] = await Promise.all([
     prisma.task.findMany({ include: { labels: true, subtasks: true } }),

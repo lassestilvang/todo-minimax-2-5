@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Check, Trash2, X, Flag, List, ChevronDown, Tag } from "lucide-react";
+import { Check, Trash2, X, Flag, List, ChevronDown, Tag, Copy } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { PRIORITY_COLORS } from "@/types";
@@ -12,6 +12,7 @@ interface BulkActionToolbarProps {
   onClearSelection: () => void;
   onToggleComplete: () => void;
   onDelete: () => void;
+  onDuplicate: () => void;
   onBatchUpdate: (data: { priority?: string; listId?: string | null; labelIds?: string[] }) => void;
   lists: ListType[];
   labels: Label[];
@@ -24,6 +25,7 @@ export function BulkActionToolbar({
   onClearSelection,
   onToggleComplete,
   onDelete,
+  onDuplicate,
   onBatchUpdate,
   lists,
   labels,
@@ -58,6 +60,15 @@ export function BulkActionToolbar({
             <BatchListSelect lists={lists} onSelect={(listId) => onBatchUpdate({ listId })} />
             <BatchLabelSelect labels={labels} onSelect={(labelIds) => onBatchUpdate({ labelIds })} />
             <div className="w-[1px] h-6 bg-border mx-1" />
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 gap-2"
+              onClick={onDuplicate}
+            >
+              <Copy className="h-4 w-4" />
+              Duplicate
+            </Button>
             <Button
               variant="outline"
               size="sm"

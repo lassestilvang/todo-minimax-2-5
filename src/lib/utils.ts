@@ -80,10 +80,10 @@ export function getNextRecurrenceDate(
           } else if (parsed.unit === "year") {
             nextDate = addYears(nextDate, parsed.interval);
           } else if (parsed.unit === "weekday" && parsed.dayOfWeek !== null) {
-            nextDate = nextDay(nextDate, parsed.dayOfWeek);
+            nextDate = nextDay(nextDate, parsed.dayOfWeek as any);
             // If the next day is the same as current, move to next week
             if (nextDate.getTime() === startOfDay(currentDueDate).getTime()) {
-              nextDate = addWeeks(nextDay(nextDate, parsed.dayOfWeek), 1);
+              nextDate = addWeeks(nextDay(nextDate, parsed.dayOfWeek as any), 1);
             }
           } else if (parsed.unit === "weekday") {
             // Find next weekday (Mon-Fri)

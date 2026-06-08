@@ -38,6 +38,7 @@ import {
   batchUpdateTasks,
   updateTaskOrder,
   acknowledgeReminder,
+  duplicateTasks,
 } from "./actions";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import {
@@ -58,6 +59,7 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
   const searchParams = useSearchParams();
   const router = useRouter();
   const { showToast } = useToast();
+  
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [lists, setLists] = useState<List[]>(initialLists);
   const [labels, setLabels] = useState<Label[]>(initialLabels);
@@ -84,6 +86,7 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
     confirmLabel: string;
     onConfirm: () => void;
   }>({ isOpen: false, title: "", description: "", confirmLabel: "", onConfirm: () => {} });
+  
   const quickAddRef = useRef<QuickAddBarHandle>(null);
 
   // Get URL params first so they're available to handlers below
@@ -236,6 +239,23 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
         setTasks(Array.isArray(result) ? result : result.tasks);
       } catch {
         showToast("Failed to update tasks");
+      }
+    });
+  }, [selectedTaskIds, currentView, currentListId, currentLabelId, showToast]);
+
+  const handleDuplicate = useCallback(() => {
+    const ids = Array.from(selectedTaskIds);
+    if (ids.length === 0) return;
+
+    startTransition(async () => {
+      try {
+        await duplicateTasks(ids);
+        showToast(`Duplicated ${ids.length} tasks`, "success");
+        setSelectedTaskIds(new Set());
+        const result = await getTasks(currentView, currentListId, currentLabelId);
+        setTasks(Array.isArray(result) ? result : result.tasks);
+      } catch {
+        showToast("Failed to duplicate tasks");
       }
     });
   }, [selectedTaskIds, currentView, currentListId, currentLabelId, showToast]);
@@ -960,6 +980,7 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
         onClearSelection={handleClearSelection}
         onToggleComplete={handleBulkToggleComplete}
         onDelete={handleBulkDelete}
+        onDuplicate={handleDuplicate}
         onBatchUpdate={handleBatchUpdate}
         lists={lists}
         labels={labels}
