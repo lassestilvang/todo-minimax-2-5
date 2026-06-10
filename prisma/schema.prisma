@@ -29,6 +29,7 @@ model Task {
   dueDate         DateTime?
   deadline        DateTime?
   reminder        DateTime?
+  reminderAcknowledged Boolean @default(false)
   estimate        Int? // in minutes
   actualTime      Int? // in minutes
   priority        Priority    @default(NONE)
