@@ -21,6 +21,7 @@ export interface Task {
   dueDate: Date | null;
   deadline: Date | null;
   reminder: Date | null;
+  reminderAcknowledged: boolean;
   estimate: number | null;
   actualTime: number | null;
   priority: Priority;
