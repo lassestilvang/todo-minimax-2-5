@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition, useMemo, useCallback, useOptimistic, useRef } from "react";
+import React, { useState, useTransition, useMemo, useCallback, useOptimistic, useRef, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { Plus, Eye, EyeOff, Flag } from "lucide-react";
@@ -37,6 +37,7 @@ import {
   getTasks,
   batchUpdateTasks,
   updateTaskOrder,
+  acknowledgeReminder,
 } from "./actions";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import {
@@ -67,6 +68,7 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
     setLists(initialLists);
     setLabels(initialLabels);
   }, [initialLists, initialLabels]);
+
   const [showCompleted, setShowCompleted] = useState(true);
   const [priorityFilter, setPriorityFilter] = useState<Priority | null>(null);
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
@@ -119,6 +121,36 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
       }
     }
   );
+
+  // Reminder Polling
+  useEffect(() => {
+    const checkReminders = () => {
+      const now = new Date();
+      optimisticTasks.forEach(task => {
+        if (task.reminder && !task.completed && !task.reminderAcknowledged && new Date(task.reminder) <= now) {
+          showToast(`🔔 Reminder: ${task.title}`, "info", {
+            label: "Dismiss",
+            onClick: () => {
+              startTransition(async () => {
+                try {
+                  await acknowledgeReminder(task.id);
+                  // Update optimistic state to reflect acknowledged status
+                  setTasks(prev => prev.map(t => t.id === task.id ? { ...t, reminderAcknowledged: true } : t));
+                } catch (e) {
+                  console.error("Failed to acknowledge reminder:", e);
+                }
+              });
+            },
+          });
+          // Optimistically update
+          setTasks(prev => prev.map(t => t.id === task.id ? { ...t, reminderAcknowledged: true } : t));
+        }
+      });
+    };
+
+    const intervalId = setInterval(checkReminders, 60 * 1000); // Check every minute
+    return () => clearInterval(intervalId);
+  }, [optimisticTasks, showToast]);
 
   const handleSelectTask = useCallback((id: string) => {
     setSelectedTaskIds((prev) => {
@@ -446,6 +478,7 @@ export function HomeClient({ initialTasks, initialLists, initialLabels }: HomeCl
       dueDate: data.dueDate || null,
       deadline: data.deadline || null,
       reminder: data.reminder || null,
+      reminderAcknowledged: false,
       estimate: data.estimate || null,
       actualTime: null,
       priority: data.priority,
