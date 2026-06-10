@@ -16,7 +16,7 @@ export function parseCustomRecurring(text: string) {
   const everyMatch = lowerText.match(/every\s+(\d+)\s+(day|week|month|year)s?/);
   if (everyMatch) {
     interval = parseInt(everyMatch[1]);
-    unit = everyMatch[2] as typeof unit;
+    unit = everyMatch[2] as any;
   } else if (lowerText.includes("every day")) {
     unit = "day";
   } else if (lowerText.includes("every week")) {
