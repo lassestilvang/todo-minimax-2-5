@@ -184,6 +184,7 @@ export async function createTask(data: TaskFormData) {
       dueDate: data.dueDate || null,
       deadline: data.deadline || null,
       reminder: data.reminder || null,
+      reminderAcknowledged: false, // New tasks always have reminders unacknowledged
       estimate: data.estimate || null,
       priority: data.priority || "NONE",
       recurringType: data.recurringType || null,
@@ -217,6 +218,10 @@ export async function updateTask(id: string, data: Partial<TaskFormData>) {
       dueDate: data.dueDate !== undefined ? (data.dueDate || null) : undefined,
       deadline: data.deadline !== undefined ? (data.deadline || null) : undefined,
       reminder: data.reminder !== undefined ? (data.reminder || null) : undefined,
+      // If reminder date changes, reset acknowledged status
+      reminderAcknowledged: (data.reminder !== undefined && (data.reminder || null) !== currentTask?.reminder)
+        ? false
+        : undefined,
       estimate: data.estimate !== undefined ? (data.estimate || null) : undefined,
       priority: data.priority,
       recurringType: data.recurringType !== undefined ? (data.recurringType || null) : undefined,
@@ -793,6 +798,14 @@ export async function getOverdueCount() {
     },
   });
   return count;
+}
+
+export async function acknowledgeReminder(taskId: string) {
+  await prisma.task.update({
+    where: { id: taskId },
+    data: { reminderAcknowledged: true },
+  });
+  revalidatePath("/");
 }
 
 export async function exportData() {
